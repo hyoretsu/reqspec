@@ -1,0 +1,11 @@
+{
+	"name": "UniDB",
+	"short_name": "UniDB",
+	"description": "",
+	"url": "https://unidb.hyoretsu.com",
+	"orientation": "portrait",
+	"display": "standalone",
+	"dir": "ltr",
+	"background_color": "#1e5a70",
+	"theme_color": "#1e5a70"
+}

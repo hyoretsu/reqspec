@@ -1,0 +1,72 @@
+* {
+	margin: 0;
+	padding: 0;
+	outline: 0;
+	box-sizing: border-box;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+	background-color: #e4e4f1;
+
+	> main {
+		padding: 1rem;
+	}
+}
+
+body,
+input,
+select,
+button {
+	font-size: 1rem;
+	-webkit-font-smoothing: antialiased;
+}
+
+option {
+	text-align-last: center;
+}
+
+b,
+i,
+p,
+span {
+	hyphens: auto;
+}
+
+a {
+	text-decoration: none;
+}
+
+button,
+fieldset,
+input {
+	border: none;
+}
+
+button {
+	background: none;
+	cursor: pointer;
+
+	&:disabled {
+		cursor: default;
+	}
+}
+
+input,
+select {
+	background: transparent;
+	&::-webkit-outer-spin-button,
+	&::-webkit-inner-spin-button {
+		appearance: none;
+	}
+}
+
+option {
+	border-bottom: none;
+}
+
+label {
+	cursor: text;
+}

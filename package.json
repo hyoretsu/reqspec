@@ -1,0 +1,35 @@
+{
+	"name": "unidb",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"build": "next build",
+		"dev": "next dev --turbo",
+		"prepare": "git config --local core.hooksPath .githooks",
+		"start": "next start",
+		"tad": "tauri android dev",
+		"tb": "tauri build",
+		"td": "tauri dev",
+		"tid": "tauri ios dev"
+	},
+	"lint-staged": {
+		"**/*.(js|jsx|json|jsonc|ts|tsx)": ["biome check --apply"]
+	},
+	"dependencies": {
+		"next": "^14.2.15",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"sass": "^1.79.5"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.3",
+		"@next/env": "^14.2.15",
+		"@tauri-apps/cli": "^2.0.3",
+		"@tsconfig/next": "^2.0.3",
+		"@types/react": "^18.3.11",
+		"@types/react-dom": "^18.3.1",
+		"bun-types": "^1.1.30",
+		"lint-staged": "^15.2.10",
+		"typescript": "^5.6.3"
+	}
+}

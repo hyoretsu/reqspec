@@ -1,0 +1,37 @@
+{
+	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+	"productName": "UniDB",
+	"version": "1.0.0",
+	"identifier": "com.hyoretsu.unidb",
+	"app": {
+		"security": {
+			"csp": null
+		},
+		"windows": [
+			{
+				"title": "UniDB",
+				"width": 1280,
+				"height": 720,
+				"resizable": true,
+				"fullscreen": false
+			}
+		]
+	},
+	"build": {
+		"beforeBuildCommand": "bun run build",
+		"beforeDevCommand": "bun run dev",
+		"devUrl": "http://localhost:3000",
+		"frontendDist": "../out"
+	},
+	"bundle": {
+		"active": true,
+		"targets": "all",
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		]
+	}
+}
