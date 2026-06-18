@@ -72,4 +72,4 @@ call_lefthook()
   fi
 }
 
-call_lefthook run "post-merge" "$@"
+call_lefthook run "commit-msg" "$@"

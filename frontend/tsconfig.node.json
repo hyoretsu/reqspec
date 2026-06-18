@@ -1,0 +1,9 @@
+{
+	"compilerOptions": {
+		"allowSyntheticDefaultImports": true,
+		"composite": true,
+		"moduleResolution": "bundler"
+	},
+	"extends": "@hyoretsu/configs/ts-frontend",
+	"include": ["vite.config.ts"]
+}
