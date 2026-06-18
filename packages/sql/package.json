@@ -1,0 +1,35 @@
+{
+	"name": "sql",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"db:init": "prisma-next db init --db $DATABASE_URL",
+		"db:update": "prisma-next db update --db $DATABASE_URL",
+		"export": "prisma-next contract emit --output-path ./out",
+		"migrate": "prisma-next migrate --db $DATABASE_URL",
+		"migrate:plan": "prisma-next migration plan"
+	},
+	"dependencies": {
+		"@prisma-next/adapter-postgres": "^0.13.0",
+		"@prisma-next/contract": "^0.13.0",
+		"@prisma-next/driver-postgres": "^0.13.0",
+		"@prisma-next/family-sql": "^0.13.0",
+		"@prisma-next/postgres": "^0.13.0",
+		"@prisma-next/sql-builder": "^0.13.0",
+		"@prisma-next/sql-contract": "^0.13.0",
+		"@prisma-next/sql-orm-client": "^0.13.0",
+		"@prisma-next/sql-relational-core": "^0.13.0",
+		"@prisma-next/sql-runtime": "^0.13.0",
+		"@prisma-next/target-postgres": "^0.13.0",
+		"pg": "^8.12.0"
+	},
+	"devDependencies": {
+		"@prisma-next/cli": "^0.13.0",
+		"@prisma-next/sql-contract-psl": "^0.13.0",
+		"@types/pg": "^8.11.6"
+	}
+}
