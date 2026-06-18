@@ -1,3 +1,4 @@
 #!/bin/sh
 
 git pull
+bun run check-types && bun run build
