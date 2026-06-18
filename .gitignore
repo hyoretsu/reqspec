@@ -1,24 +1,21 @@
-node_modules
-tmp
-!.gitkeep
+.env
+.env.local
 
-# Env files
-**/.env
-**/.env*.local
+# Turbo
+.turbo/
 
-# Next.js
-.next
-out
+# Tauri
+src-tauri/target/
+frontend/src-tauri/target/
 
-# Package managers
-# bun.lockb
-package-lock.json
-pnpm-lock.yaml
-yarn.lock
+# Build outputs
+dist/
+out/
+build/
 
-# Test files
-**/coverage
+# Bun
+bun.lockb
+node_modules/
 
-# TypeScript
-next-env.d.ts
-*.tsbuildinfo
+# TanStack Router (auto-generated)
+frontend/src/routeTree.gen.ts

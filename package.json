@@ -1,36 +1,37 @@
 {
-	"name": "unidb",
+	"name": "reqspec",
 	"version": "1.0.0",
 	"private": true,
+	"type": "module",
+	"packageManager": "bun@1.3.11",
+	"workspaces": [
+		"frontend",
+		"packages/*"
+	],
 	"scripts": {
-		"build": "next build",
-		"check-types": "tsc --noEmit",
-		"dev": "next dev --turbo",
-		"prepare": "git config --local core.hooksPath .githooks",
-		"start": "next start",
-		"tad": "tauri android dev",
-		"tb": "tauri build",
-		"td": "tauri dev",
-		"tid": "tauri ios dev"
-	},
-	"lint-staged": {
-		"**/*.(js|jsx|json|jsonc|ts|tsx)": ["biome check --apply"]
-	},
-	"dependencies": {
-		"next": "^14.2.15",
-		"react": "^18.3.1",
-		"react-dom": "^18.3.1",
-		"sass": "^1.79.5"
+		"build": "turbo build",
+		"check-types": "turbo check-types",
+		"commit": "git add . && bun committier ai",
+		"dev": "turbo dev",
+		"format": "bun format:biome .",
+		"format:biome": "bunx biome check --diagnostic-level=error --write --unsafe",
+		"prepare": "lefthook install || true",
+		"start": "turbo start"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.9.3",
-		"@next/env": "^14.2.15",
-		"@tauri-apps/cli": "^2.0.3",
-		"@tsconfig/next": "^2.0.3",
-		"@types/react": "^18.3.11",
-		"@types/react-dom": "^18.3.1",
-		"bun-types": "^1.1.30",
-		"lint-staged": "^15.2.10",
-		"typescript": "^5.6.3"
-	}
+		"@biomejs/biome": "^2.0.0",
+		"@commitlint/cli": "^20.5.3",
+		"@commitlint/config-conventional": "^20.5.3",
+		"@commitlint/types": "^20.5.0",
+		"@hyoretsu/configs": "^1.2.33",
+		"@types/bun": "^1.3.13",
+		"committier": "^0.2.3",
+		"lefthook": "^2.1.8",
+		"turbo": "^2.9.7",
+		"typescript": "^6.0.3"
+	},
+	"trustedDependencies": [
+		"@biomejs/biome",
+		"lefthook"
+	]
 }

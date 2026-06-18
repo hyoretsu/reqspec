@@ -1,0 +1,21 @@
+{
+	"$schema": "https://turborepo.dev/schema.json",
+	"tasks": {
+		"build": {
+			"inputs": ["src/**"],
+			"outputLogs": "new-only",
+			"outputs": ["build/**", "dist/**", "out/**"]
+		},
+		"check-types": {
+			"inputs": ["src/**", "tsconfig*.json"],
+			"outputLogs": "new-only"
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"start": {
+			"cache": false
+		}
+	}
+}
