@@ -1,6 +1,60 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
 
-:root {
-	font-family: "Inter Variable", sans-serif;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	--font-sans: "Inter Variable", sans-serif;
+	--font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Fira Code", monospace;
+
+	--color-bg: hsl(0 0% 100%);
+	--color-surface: hsl(220 14% 98%);
+	--color-surface-raised: hsl(0 0% 100%);
+	--color-border: hsl(220 13% 90%);
+	--color-fg: hsl(222 47% 11%);
+	--color-muted: hsl(220 9% 46%);
+	--color-primary: hsl(243 75% 59%);
+	--color-primary-fg: hsl(0 0% 100%);
+	--color-danger: hsl(0 72% 51%);
+	--color-success: hsl(142 71% 45%);
+	--color-warning: hsl(38 92% 50%);
+
+	--color-method-get: hsl(142 71% 45%);
+	--color-method-post: hsl(38 92% 50%);
+	--color-method-put: hsl(217 91% 60%);
+	--color-method-patch: hsl(262 83% 58%);
+	--color-method-delete: hsl(0 72% 51%);
+	--color-method-head: hsl(199 89% 48%);
+	--color-method-options: hsl(220 9% 46%);
+
+	--radius-card: 0.625rem;
+}
+
+.dark {
+	--color-bg: hsl(222 47% 8%);
+	--color-surface: hsl(222 40% 11%);
+	--color-surface-raised: hsl(222 38% 14%);
+	--color-border: hsl(222 25% 22%);
+	--color-fg: hsl(210 40% 96%);
+	--color-muted: hsl(218 11% 58%);
+	--color-primary: hsl(243 80% 67%);
+	--color-primary-fg: hsl(0 0% 100%);
+	--color-danger: hsl(0 84% 63%);
+	--color-success: hsl(142 69% 52%);
+	--color-warning: hsl(38 95% 58%);
+}
+
+html,
+body {
+	height: 100%;
+}
+
+body {
+	background-color: var(--color-bg);
+	color: var(--color-fg);
+	font-family: var(--font-sans);
+}
+
+#root {
+	height: 100%;
 }
