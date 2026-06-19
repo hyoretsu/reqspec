@@ -7,6 +7,11 @@ import appCss from "../globals.css?url";
 
 const queryClient = new QueryClient();
 
+// Runs before hydration: applies the persisted theme class so server/client match
+// and there is no flash of the wrong theme. SSR can't read localStorage, so the
+// <html> below uses suppressHydrationWarning for this intentional attribute diff.
+const themeInitScript = `(function(){try{var s=JSON.parse(localStorage.getItem("reqspec-theme")||"{}");var p=s&&s.state&&s.state.preference||"system";var d=p==="dark"||(p==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})()`;
+
 export const Route = createRootRoute({
 	head: () => ({
 		meta: [
@@ -22,8 +27,10 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: ReactNode }) {
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<head>
+				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: static pre-hydration theme init, no user input */}
+				<script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
 				<HeadContent />
 			</head>
 			<body>
