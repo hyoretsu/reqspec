@@ -6,6 +6,7 @@ export { FormField } from "@/components/ui/FormField";
 export { Spinner } from "@/components/ui/Spinner";
 export { MethodBadge, StatusBadge } from "@/components/ui/Badge";
 export { EmptyState } from "@/components/ui/EmptyState";
+export { Logo } from "@/components/ui/Logo";
 export { CodeBlock } from "@/components/ui/CodeBlock";
 export { ThemeToggle } from "@/components/ui/ThemeToggle";
 export { KeyValueList } from "@/components/ui/KeyValueList";
