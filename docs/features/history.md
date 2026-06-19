@@ -4,7 +4,7 @@ Every sent request is recorded locally.
 
 ## What it does
 
-- On each **Send**, reqspec stores a snapshot: the request definition (as sent) and the
+- On each **Send**, ReqSpec stores a snapshot: the request definition (as sent) and the
   normalized response (status, headers, body, cookies, timing, size).
 - The History panel lists entries most-recent-first.
 

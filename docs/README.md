@@ -1,6 +1,6 @@
-# reqspec — Documentation
+# ReqSpec — Documentation
 
-reqspec is an offline-first API client (a Postman-style tool) that runs as one codebase
+ReqSpec is an offline-first API client (a Postman-style tool) that runs as one codebase
 across web, mobile, and desktop (Tauri 2). Every feature works fully offline; only cloud
 **sync** is a paid in-app purchase.
 

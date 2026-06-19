@@ -1,6 +1,6 @@
 # Local Storage & Offline Model
 
-reqspec is offline-first. All data lives on-device.
+ReqSpec is offline-first. All data lives on-device.
 
 ## What it does
 

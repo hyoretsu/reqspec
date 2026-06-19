@@ -1,6 +1,6 @@
 # HTTP Execution
 
-How reqspec actually sends requests, and why behavior differs between platforms.
+How ReqSpec actually sends requests, and why behavior differs between platforms.
 
 ## The pipeline
 

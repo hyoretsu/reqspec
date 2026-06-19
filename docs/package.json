@@ -1,6 +1,6 @@
 {
-	"name": "@reqspec/docs",
+	"name": "docs",
 	"version": "1.0.0",
 	"private": true,
-	"description": "Feature documentation for reqspec"
+	"description": "Feature documentation for ReqSpec"
 }
