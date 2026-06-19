@@ -1,21 +1,56 @@
-.env
-.env.local
+tmp/
+.cache
+*.log
+.expo
+!opengraph.*
+certificates
 
-# Turbo
-.turbo/
-
-# Tauri
-src-tauri/target/
-frontend/src-tauri/target/
-
-# Build outputs
+# Artifacts
+build/
+generated/
 dist/
 out/
-build/
 
-# Bun
-bun.lockb
+# Dependencies
 node_modules/
+.pnp/
+.pnpm-store
+.pnp.js
 
-# TanStack Router (auto-generated)
-frontend/src/routeTree.gen.ts
+# Env files
+.env
+.env*.local
+
+# Git
+!.github/**/*
+!.gitkeep
+
+# IDEs
+.idea
+.vscode
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# Lefthook
+.githooks/
+lefthook-local.yml
+
+# Vendor
+.codex
+!.codex/
+.env.iranti
+.env.iranti.local
+.next
+.shopify
+.turbo
+.vercel
+.vinext
+next-env.d.ts
+
+# Test files
+coverage/
+
+# TypeScript
+*.tsbuildinfo
