@@ -33,16 +33,22 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 | Feature | Status | Notes |
 | --- | --- | --- |
 | Collections | ✅ | |
-| Folders (nesting) | 🟡 | stored + imported; flat in the M1 UI |
+| Folders (nesting) | ✅ | create/rename/delete in the tree |
+| Drag-reorder (collections/requests) | ✅ | @dnd-kit |
 | Save requests | ✅ | |
+| Request duplicate / rename | ✅ | |
+| Local workspaces | ✅ | switch in the top bar; collections/envs scoped |
+| Saved response examples | ✅ | re-openable as tabs |
 | History | ✅ | re-open past sends |
 | Environments + variables | ✅ | |
 | Global variables | ✅ | |
 | `{{variable}}` interpolation | ✅ | env > globals |
-| Dynamic variables (`{{$guid}}`, …) | ❌ | |
-| Secret/masked variables | ❌ | |
-| Request description / docs (markdown) | ❌ | |
-| Multiple request tabs | ❌ | single active request in M1 |
+| Dynamic variables (`{{$guid}}`, …) | ❌ | M3 |
+| Secret/masked variables | ❌ | M3 |
+| Request description / docs (markdown) | ✅ | Docs tab, sanitized preview |
+| Multiple request tabs | ✅ | persisted per workspace |
+| Command palette / global search | ✅ | Cmd/Ctrl+K |
+| Keyboard shortcuts | ✅ | send / save / new tab |
 
 ## Auth
 
@@ -95,10 +101,13 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 | Cloud sync across devices | ➖ | planned as the paid IAP |
 | Workspaces / teams / comments / forking | ➖ | cloud collaboration, out of scope |
 
-## Nearest-term gaps to close parity
+## Roadmap
 
-1. Pre-request & test scripts (sandboxed JS) — the biggest functional gap.
-2. More auth types (API key, OAuth 2.0).
-3. Multiple request tabs + folder UI + drag-reorder.
-4. Response syntax highlighting + search; save examples.
-5. Export to Postman and cURL/OpenAPI import.
+Full sequenced plan: `~/.claude/plans/this-app-is-basically-peppy-floyd.md`.
+M2 (workspaces, tabs, folders, docs, examples, search) is **done**. Next:
+
+1. **M3** — variable scopes + dynamic vars + secret vars + cookie jar.
+2. **M4** — auth parity (API key, OAuth 2.0, AWS SigV4, digest, …).
+3. **M5** — body parity (GraphQL, file upload, binary).
+4. **M6** — pre-request & test scripts (QuickJS) — the biggest functional gap.
+5. **M7–M10** — runner, mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.

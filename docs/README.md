@@ -12,6 +12,7 @@ across web, mobile, and desktop (Tauri 2). Every feature works fully offline; on
 | Request builder | [features/requests.md](features/requests.md) |
 | Environments & variables | [features/environments.md](features/environments.md) |
 | History | [features/history.md](features/history.md) |
+| Workspaces, tabs & organization | [features/workspaces-tabs.md](features/workspaces-tabs.md) |
 | Import (Postman) | [features/import.md](features/import.md) |
 | HTTP execution (native vs web) | [features/http-execution.md](features/http-execution.md) |
 | Local storage & offline model | [features/storage.md](features/storage.md) |
