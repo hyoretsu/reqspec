@@ -10,7 +10,8 @@ import { useSessionStore } from "@/lib/store/session.store";
 import { confirmDialog } from "@/lib/ui/modal";
 
 export function EnvironmentManager() {
-	const { data: environments } = useEnvironments();
+	const workspaceId = useSessionStore(state => state.activeWorkspaceId);
+	const { data: environments } = useEnvironments(workspaceId);
 	const { data: globals } = useGlobals();
 	const { setVariables, setGlobals, remove } = useEnvironmentMutations();
 	const selectedId = useSessionStore(state => state.selectedEnvironmentId);

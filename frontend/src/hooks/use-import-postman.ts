@@ -3,12 +3,14 @@ import { useRef } from "react";
 import { collectionsKey } from "@/hooks/queries/use-collections";
 import { environmentsKey } from "@/hooks/queries/use-environments";
 import { importPostmanText, type ImportResult } from "@/lib/import/persist";
+import { useSessionStore } from "@/lib/store/session.store";
 import { confirmDialog } from "@/lib/ui/modal";
 
 /** Wires an Import button to a hidden file input that ingests Postman exports. */
 export function useImportPostman() {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const qc = useQueryClient();
+	const workspaceId = useSessionStore(state => state.activeWorkspaceId);
 
 	const openPicker = () => inputRef.current?.click();
 
@@ -19,7 +21,7 @@ export function useImportPostman() {
 		const errors: string[] = [];
 		for (const file of Array.from(files)) {
 			try {
-				results.push(await importPostmanText(await file.text()));
+				results.push(await importPostmanText(workspaceId, await file.text()));
 			} catch (err) {
 				errors.push(`${file.name}: ${err instanceof Error ? err.message : "import failed"}`);
 			}

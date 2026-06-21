@@ -1,12 +1,15 @@
 import { Button, EmptyState, Spinner } from "@/components/ui";
+import { SortableItem, SortableList } from "@/components/ui/Sortable";
 import { CollectionNode } from "@/components/collections/CollectionsTree/CollectionNode";
 import { useCollections, useCollectionMutations } from "@/hooks/queries/use-collections";
 import { useImportPostman } from "@/hooks/use-import-postman";
+import { useSessionStore } from "@/lib/store/session.store";
 import { promptDialog } from "@/lib/ui/modal";
 
 export function CollectionsTree() {
-	const { data: collections, isLoading } = useCollections();
-	const { create } = useCollectionMutations();
+	const workspaceId = useSessionStore(state => state.activeWorkspaceId);
+	const { data: collections, isLoading } = useCollections(workspaceId);
+	const { create, reorder } = useCollectionMutations();
 	const { inputRef, openPicker, onFilesSelected } = useImportPostman();
 
 	const addCollection = async () => {
@@ -15,7 +18,7 @@ export function CollectionsTree() {
 			placeholder: "Collection name",
 			defaultValue: "New collection",
 		});
-		if (name) await create.mutateAsync(name);
+		if (name) await create.mutateAsync({ workspaceId, name });
 	};
 
 	return (
@@ -46,7 +49,13 @@ export function CollectionsTree() {
 						<Spinner />
 					</div>
 				) : collections?.length ? (
-					collections.map(collection => <CollectionNode key={collection.id} collection={collection} />)
+					<SortableList ids={collections.map(c => c.id)} onReorder={ids => reorder.mutate(ids)}>
+						{collections.map(collection => (
+							<SortableItem key={collection.id} id={collection.id}>
+								{() => <CollectionNode collection={collection} />}
+							</SortableItem>
+						))}
+					</SortableList>
 				) : (
 					<EmptyState
 						title="No collections"

@@ -6,7 +6,8 @@ import { promptDialog } from "@/lib/ui/modal";
 const NONE = "__none__";
 
 export function EnvSelector() {
-	const { data: environments } = useEnvironments();
+	const workspaceId = useSessionStore(state => state.activeWorkspaceId);
+	const { data: environments } = useEnvironments(workspaceId);
 	const { create } = useEnvironmentMutations();
 	const selectedId = useSessionStore(state => state.selectedEnvironmentId);
 	const setSelected = useSessionStore(state => state.setSelectedEnvironment);
@@ -19,7 +20,7 @@ export function EnvSelector() {
 	const addEnvironment = async () => {
 		const name = await promptDialog({ title: "New environment", placeholder: "e.g. Production" });
 		if (name) {
-			const env = await create.mutateAsync(name);
+			const env = await create.mutateAsync({ workspaceId, name });
 			setSelected(env.id);
 		}
 	};

@@ -1,17 +1,18 @@
 import { db } from "@/lib/db/db";
 import { GLOBALS_ID, type EnvironmentRow, type GlobalsRow, type VariableRow } from "@/lib/db/types";
 
-export function listEnvironments(): Promise<EnvironmentRow[]> {
-	return db.environments.orderBy("createdAt").toArray();
+export function listEnvironments(workspaceId: string): Promise<EnvironmentRow[]> {
+	return db.environments.where("workspaceId").equals(workspaceId).sortBy("createdAt");
 }
 
 export function getEnvironment(id: string): Promise<EnvironmentRow | undefined> {
 	return db.environments.get(id);
 }
 
-export async function createEnvironment(name: string): Promise<EnvironmentRow> {
+export async function createEnvironment(workspaceId: string, name: string): Promise<EnvironmentRow> {
 	const row: EnvironmentRow = {
 		id: crypto.randomUUID(),
+		workspaceId,
 		name,
 		createdAt: Date.now(),
 		variables: [],

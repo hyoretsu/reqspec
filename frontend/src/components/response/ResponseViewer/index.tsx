@@ -1,8 +1,12 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { EmptyState, KeyValueList, Spinner, StatusBadge, Tabs, type TabItem } from "@/components/ui";
+import { Button, EmptyState, KeyValueList, Spinner, StatusBadge, Tabs, type TabItem } from "@/components/ui";
 import { ResponseBodyTab } from "@/components/response/ResponseViewer/ResponseBodyTab";
 import { ResponseCookiesTab } from "@/components/response/ResponseViewer/ResponseCookiesTab";
+import * as requestsRepo from "@/lib/db/requests.repo";
+import type { SavedExample } from "@/lib/db/types";
 import { useActiveRequestStore } from "@/lib/store/active-request.store";
+import { promptDialog } from "@/lib/ui/modal";
 
 type ResponseSection = "body" | "headers" | "cookies";
 
@@ -16,6 +20,25 @@ export function ResponseViewer() {
 	const [section, setSection] = useState<ResponseSection>("body");
 	const response = useActiveRequestStore(state => state.response);
 	const isSending = useActiveRequestStore(state => state.isSending);
+	const requestId = useActiveRequestStore(state => state.requestId);
+	const draft = useActiveRequestStore(state => state.draft);
+	const qc = useQueryClient();
+
+	const saveExample = async () => {
+		if (!requestId || !response) return;
+		const name = await promptDialog({ title: "Save response as example", defaultValue: "Example" });
+		if (!name) return;
+		const existing = (await requestsRepo.getRequest(requestId))?.examples ?? [];
+		const example: SavedExample = {
+			id: crypto.randomUUID(),
+			name,
+			createdAt: Date.now(),
+			request: draft,
+			response,
+		};
+		await requestsRepo.updateRequest(requestId, { examples: [...existing, example] });
+		qc.invalidateQueries({ queryKey: ["request", requestId] });
+	};
 
 	if (isSending) {
 		return (
@@ -45,6 +68,11 @@ export function ResponseViewer() {
 				<StatusBadge status={response.status} statusText={response.statusText} />
 				<span>{response.timeMs} ms</span>
 				<span>{formatSize(response.bodyBytes)}</span>
+				{requestId ? (
+					<Button size="sm" variant="secondary" onClick={saveExample} className="ml-auto">
+						Save as example
+					</Button>
+				) : null}
 			</div>
 
 			<Tabs tabs={tabs} value={section} onChange={setSection} />

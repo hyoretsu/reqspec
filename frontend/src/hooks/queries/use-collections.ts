@@ -7,8 +7,11 @@ export const collectionsKey = ["collections"] as const;
 export const foldersKey = (collectionId: string) => ["folders", collectionId] as const;
 export const requestsKey = (collectionId: string) => ["requests", collectionId] as const;
 
-export function useCollections() {
-	return useQuery({ queryKey: collectionsKey, queryFn: collectionsRepo.listCollections });
+export function useCollections(workspaceId: string) {
+	return useQuery({
+		queryKey: [...collectionsKey, workspaceId],
+		queryFn: () => collectionsRepo.listCollections(workspaceId),
+	});
 }
 
 export function useFolders(collectionId: string) {
@@ -29,12 +32,17 @@ export function useCollectionMutations() {
 	const qc = useQueryClient();
 	const invalidate = () => qc.invalidateQueries({ queryKey: collectionsKey });
 
-	const create = useMutation({ mutationFn: collectionsRepo.createCollection, onSuccess: invalidate });
+	const create = useMutation({
+		mutationFn: ({ workspaceId, name }: { workspaceId: string; name: string }) =>
+			collectionsRepo.createCollection(workspaceId, name),
+		onSuccess: invalidate,
+	});
 	const rename = useMutation({
 		mutationFn: ({ id, name }: { id: string; name: string }) => collectionsRepo.renameCollection(id, name),
 		onSuccess: invalidate,
 	});
+	const reorder = useMutation({ mutationFn: collectionsRepo.reorderCollections, onSuccess: invalidate });
 	const remove = useMutation({ mutationFn: collectionsRepo.deleteCollection, onSuccess: invalidate });
 
-	return { create, rename, remove };
+	return { create, rename, reorder, remove };
 }

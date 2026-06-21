@@ -1,6 +1,6 @@
 import { IconButton, MethodBadge, StatusBadge } from "@/components/ui";
 import type { HistoryRow } from "@/lib/db/types";
-import { useActiveRequestStore } from "@/lib/store/active-request.store";
+import { useTabsStore } from "@/lib/store/tabs.store";
 
 interface HistoryItemProps {
 	row: HistoryRow;
@@ -8,12 +8,10 @@ interface HistoryItemProps {
 }
 
 export function HistoryItem({ row, onDelete }: HistoryItemProps) {
-	const loadDraft = useActiveRequestStore(state => state.loadDraft);
-	const setResponse = useActiveRequestStore(state => state.setResponse);
+	const openLoaded = useTabsStore(state => state.openLoaded);
 
 	const reopen = () => {
-		loadDraft(row.name, row.request);
-		setResponse(row.response);
+		openLoaded({ requestId: null, name: row.name, draft: row.request, dirty: false, response: row.response });
 	};
 
 	return (

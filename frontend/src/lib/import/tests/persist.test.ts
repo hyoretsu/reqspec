@@ -4,7 +4,10 @@ import * as collectionsRepo from "@/lib/db/collections.repo";
 import * as environmentsRepo from "@/lib/db/environments.repo";
 import * as foldersRepo from "@/lib/db/folders.repo";
 import * as requestsRepo from "@/lib/db/requests.repo";
+import { DEFAULT_WORKSPACE_ID } from "@/lib/db/types";
 import { importPostmanText } from "@/lib/import/persist";
+
+const WS = DEFAULT_WORKSPACE_ID;
 
 beforeEach(async () => {
 	await Promise.all([
@@ -29,10 +32,10 @@ const collectionJson = JSON.stringify({
 
 describe("importPostmanText — collection", () => {
 	it("creates the collection, nested folders, requests and a variables environment", async () => {
-		const result = await importPostmanText(collectionJson);
+		const result = await importPostmanText(WS, collectionJson);
 		expect(result).toEqual({ kind: "collection", name: "Sample API", requestCount: 2 });
 
-		const collections = await collectionsRepo.listCollections();
+		const collections = await collectionsRepo.listCollections(WS);
 		expect(collections).toHaveLength(1);
 
 		const folders = await foldersRepo.listFoldersByCollection(collections[0].id);
@@ -43,20 +46,21 @@ describe("importPostmanText — collection", () => {
 		const list = requests.find(r => r.name === "List");
 		expect(list?.folderId).toBe(folders[0].id);
 
-		const envs = await environmentsRepo.listEnvironments();
+		const envs = await environmentsRepo.listEnvironments(WS);
 		expect(envs).toHaveLength(1);
 		expect(envs[0].variables[0]).toMatchObject({ key: "baseUrl", value: "https://api.test" });
 	});
 
 	it("does not create an environment when there are no collection variables", async () => {
-		await importPostmanText(JSON.stringify({ info: { name: "NoVars" }, item: [] }));
-		expect(await environmentsRepo.listEnvironments()).toHaveLength(0);
+		await importPostmanText(WS, JSON.stringify({ info: { name: "NoVars" }, item: [] }));
+		expect(await environmentsRepo.listEnvironments(WS)).toHaveLength(0);
 	});
 });
 
 describe("importPostmanText — environment", () => {
 	it("creates an environment with its variables", async () => {
 		const result = await importPostmanText(
+			WS,
 			JSON.stringify({
 				_postman_variable_scope: "environment",
 				name: "Staging",
@@ -64,7 +68,7 @@ describe("importPostmanText — environment", () => {
 			}),
 		);
 		expect(result).toEqual({ kind: "environment", name: "Staging", requestCount: 0 });
-		const envs = await environmentsRepo.listEnvironments();
+		const envs = await environmentsRepo.listEnvironments(WS);
 		expect(envs).toHaveLength(1);
 		expect(envs[0].name).toBe("Staging");
 	});
@@ -72,10 +76,10 @@ describe("importPostmanText — environment", () => {
 
 describe("importPostmanText — errors", () => {
 	it("throws on invalid JSON", async () => {
-		await expect(importPostmanText("{not json")).rejects.toThrow(/Invalid JSON/);
+		await expect(importPostmanText(WS, "{not json")).rejects.toThrow(/Invalid JSON/);
 	});
 
 	it("throws on an unrecognized shape", async () => {
-		await expect(importPostmanText(JSON.stringify({ nope: 1 }))).rejects.toThrow(/Unrecognized/);
+		await expect(importPostmanText(WS, JSON.stringify({ nope: 1 }))).rejects.toThrow(/Unrecognized/);
 	});
 });

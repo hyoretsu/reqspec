@@ -15,8 +15,8 @@ export interface ImportResult {
 	requestCount: number;
 }
 
-async function persistCollection(parsed: ImportedCollection): Promise<ImportResult> {
-	const collection = await collectionsRepo.createCollection(parsed.name);
+async function persistCollection(workspaceId: string, parsed: ImportedCollection): Promise<ImportResult> {
+	const collection = await collectionsRepo.createCollection(workspaceId, parsed.name);
 
 	// Create folders lazily, keyed by their full path, so each segment is made once.
 	const folderIds = new Map<string, string>();
@@ -42,32 +42,32 @@ async function persistCollection(parsed: ImportedCollection): Promise<ImportResu
 	}
 
 	if (parsed.variables.length > 0) {
-		const env = await environmentsRepo.createEnvironment(parsed.name);
+		const env = await environmentsRepo.createEnvironment(workspaceId, parsed.name);
 		await environmentsRepo.setEnvironmentVariables(env.id, parsed.variables);
 	}
 
 	return { kind: "collection", name: parsed.name, requestCount: parsed.requests.length };
 }
 
-async function persistEnvironment(parsed: ImportedEnvironment): Promise<ImportResult> {
-	const env = await environmentsRepo.createEnvironment(parsed.name);
+async function persistEnvironment(workspaceId: string, parsed: ImportedEnvironment): Promise<ImportResult> {
+	const env = await environmentsRepo.createEnvironment(workspaceId, parsed.name);
 	await environmentsRepo.setEnvironmentVariables(env.id, parsed.variables);
 	return { kind: "environment", name: parsed.name, requestCount: 0 };
 }
 
-async function persist(parsed: PostmanImport): Promise<ImportResult> {
+async function persist(workspaceId: string, parsed: PostmanImport): Promise<ImportResult> {
 	return parsed.kind === "collection"
-		? persistCollection(parsed.collection)
-		: persistEnvironment(parsed.environment);
+		? persistCollection(workspaceId, parsed.collection)
+		: persistEnvironment(workspaceId, parsed.environment);
 }
 
-/** Parse and persist a single Postman export file's text. */
-export async function importPostmanText(text: string): Promise<ImportResult> {
+/** Parse and persist a single Postman export file's text into the given workspace. */
+export async function importPostmanText(workspaceId: string, text: string): Promise<ImportResult> {
 	let json: unknown;
 	try {
 		json = JSON.parse(text);
 	} catch {
 		throw new Error("Invalid JSON file.");
 	}
-	return persist(parsePostman(json));
+	return persist(workspaceId, parsePostman(json));
 }

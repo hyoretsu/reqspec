@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import {
 	Button,
 	CustomSelect,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui";
 import { AuthTab } from "@/components/request/RequestBuilder/AuthTab";
 import { BodyTab } from "@/components/request/RequestBuilder/BodyTab";
+import { DocsTab } from "@/components/request/RequestBuilder/DocsTab";
 import { HeadersTab } from "@/components/request/RequestBuilder/HeadersTab";
 import { ParamsTab } from "@/components/request/RequestBuilder/ParamsTab";
 import type { RequestSection } from "@/components/request/RequestBuilder/types";
@@ -18,6 +20,7 @@ import { saveDraft } from "@/hooks/queries/use-requests";
 import { useSendRequest } from "@/hooks/use-send-request";
 import { HTTP_METHODS, type HttpMethod } from "@/lib/request/model";
 import { useActiveRequestStore } from "@/lib/store/active-request.store";
+import { useTabsStore } from "@/lib/store/tabs.store";
 
 const METHOD_OPTIONS: SelectOption<HttpMethod>[] = HTTP_METHODS.map(method => ({
 	label: method,
@@ -38,19 +41,40 @@ export function RequestBuilder() {
 	const patchDraft = useActiveRequestStore(state => state.patchDraft);
 	const markSaved = useActiveRequestStore(state => state.markSaved);
 	const send = useSendRequest();
+	const openScratch = useTabsStore(state => state.openScratch);
+	const persistActive = useTabsStore(state => state.persistActive);
 
 	const tabs: TabItem<RequestSection>[] = [
 		{ id: "params", label: "Params", badge: badge(enabledCount(draft.params)) },
 		{ id: "headers", label: "Headers", badge: badge(enabledCount(draft.headers)) },
 		{ id: "body", label: "Body", badge: draft.body.type !== "none" ? dot() : undefined },
 		{ id: "auth", label: "Auth", badge: draft.auth.type !== "none" ? dot() : undefined },
+		{ id: "docs", label: "Docs" },
 	];
 
 	const onSave = async () => {
 		if (!requestId) return;
 		await saveDraft(requestId, { request: draft });
 		markSaved();
+		persistActive();
 	};
+
+	useHotkeys(
+		"mod+enter",
+		e => {
+			e.preventDefault();
+			if (!isSending && draft.url.trim() !== "") void send();
+		},
+		{ enableOnFormTags: true },
+	);
+	useHotkeys("mod+s", e => {
+		e.preventDefault();
+		void onSave();
+	}, { enableOnFormTags: true });
+	useHotkeys("mod+t", e => {
+		e.preventDefault();
+		openScratch();
+	}, { enableOnFormTags: true });
 
 	return (
 		<div className="flex h-full flex-col gap-3 p-3">
@@ -89,6 +113,7 @@ export function RequestBuilder() {
 				{section === "headers" ? <HeadersTab /> : null}
 				{section === "body" ? <BodyTab /> : null}
 				{section === "auth" ? <AuthTab /> : null}
+				{section === "docs" ? <DocsTab /> : null}
 			</div>
 		</div>
 	);

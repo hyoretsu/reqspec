@@ -5,8 +5,11 @@ import * as environmentsRepo from "@/lib/db/environments.repo";
 import * as foldersRepo from "@/lib/db/folders.repo";
 import * as historyRepo from "@/lib/db/history.repo";
 import * as requestsRepo from "@/lib/db/requests.repo";
+import { DEFAULT_WORKSPACE_ID } from "@/lib/db/types";
 import type { NormalizedResponse } from "@/lib/http/types";
 import { createEmptyRequest } from "@/lib/request/model";
+
+const WS = DEFAULT_WORKSPACE_ID;
 
 beforeEach(async () => {
 	await Promise.all([
@@ -21,21 +24,21 @@ beforeEach(async () => {
 
 describe("collections + requests cascade", () => {
 	it("creates, lists and orders collections", async () => {
-		await collectionsRepo.createCollection("A");
-		await collectionsRepo.createCollection("B");
-		const list = await collectionsRepo.listCollections();
+		await collectionsRepo.createCollection(WS, "A");
+		await collectionsRepo.createCollection(WS, "B");
+		const list = await collectionsRepo.listCollections(WS);
 		expect(list.map(c => c.name)).toEqual(["A", "B"]);
 		expect(list.map(c => c.order)).toEqual([0, 1]);
 	});
 
 	it("renames a collection", async () => {
-		const c = await collectionsRepo.createCollection("A");
+		const c = await collectionsRepo.createCollection(WS, "A");
 		await collectionsRepo.renameCollection(c.id, "Renamed");
-		expect((await collectionsRepo.listCollections())[0].name).toBe("Renamed");
+		expect((await collectionsRepo.listCollections(WS))[0].name).toBe("Renamed");
 	});
 
 	it("cascades deletion to folders and requests", async () => {
-		const c = await collectionsRepo.createCollection("A");
+		const c = await collectionsRepo.createCollection(WS, "A");
 		const f = await foldersRepo.createFolder(c.id, "folder");
 		await requestsRepo.createRequest(c.id, "r1", f.id);
 		await collectionsRepo.deleteCollection(c.id);
@@ -48,7 +51,7 @@ describe("collections + requests cascade", () => {
 
 describe("folders cascade", () => {
 	it("deletes descendant folders and their requests", async () => {
-		const c = await collectionsRepo.createCollection("A");
+		const c = await collectionsRepo.createCollection(WS, "A");
 		const parent = await foldersRepo.createFolder(c.id, "parent");
 		const child = await foldersRepo.createFolder(c.id, "child", parent.id);
 		await requestsRepo.createRequest(c.id, "deep", child.id);
@@ -62,7 +65,7 @@ describe("folders cascade", () => {
 
 describe("requests", () => {
 	it("updates request fields and bumps updatedAt", async () => {
-		const c = await collectionsRepo.createCollection("A");
+		const c = await collectionsRepo.createCollection(WS, "A");
 		const r = await requestsRepo.createRequest(c.id, "r1");
 		const model = { ...createEmptyRequest(), url: "https://x.com" };
 		await requestsRepo.updateRequest(r.id, { name: "r2", request: model });
@@ -74,7 +77,7 @@ describe("requests", () => {
 	});
 
 	it("deletes a single request", async () => {
-		const c = await collectionsRepo.createCollection("A");
+		const c = await collectionsRepo.createCollection(WS, "A");
 		const r = await requestsRepo.createRequest(c.id, "r1");
 		await requestsRepo.deleteRequest(r.id);
 		expect(await requestsRepo.getRequest(r.id)).toBeUndefined();
@@ -83,13 +86,20 @@ describe("requests", () => {
 
 describe("environments + globals", () => {
 	it("upserts environment variables", async () => {
-		const env = await environmentsRepo.createEnvironment("Prod");
+		const env = await environmentsRepo.createEnvironment(WS, "Prod");
 		await environmentsRepo.setEnvironmentVariables(env.id, [
 			{ id: "1", key: "host", value: "x", enabled: true },
 		]);
 		const fetched = await environmentsRepo.getEnvironment(env.id);
 		expect(fetched?.variables).toHaveLength(1);
 		expect(fetched?.variables[0].key).toBe("host");
+	});
+
+	it("scopes environments to a workspace", async () => {
+		await environmentsRepo.createEnvironment(WS, "A");
+		await environmentsRepo.createEnvironment("other-ws", "B");
+		expect(await environmentsRepo.listEnvironments(WS)).toHaveLength(1);
+		expect(await environmentsRepo.listEnvironments("other-ws")).toHaveLength(1);
 	});
 
 	it("lazily creates and persists globals", async () => {
@@ -100,9 +110,9 @@ describe("environments + globals", () => {
 	});
 
 	it("deletes an environment", async () => {
-		const env = await environmentsRepo.createEnvironment("Temp");
+		const env = await environmentsRepo.createEnvironment(WS, "Temp");
 		await environmentsRepo.deleteEnvironment(env.id);
-		expect(await environmentsRepo.listEnvironments()).toHaveLength(0);
+		expect(await environmentsRepo.listEnvironments(WS)).toHaveLength(0);
 	});
 });
 

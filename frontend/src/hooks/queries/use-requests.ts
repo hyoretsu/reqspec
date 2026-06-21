@@ -20,9 +20,11 @@ export function useRequestMutations(collectionId: string) {
 		onSuccess: invalidate,
 	});
 
+	const duplicate = useMutation({ mutationFn: requestsRepo.duplicateRequest, onSuccess: invalidate });
+	const reorder = useMutation({ mutationFn: requestsRepo.reorderRequests, onSuccess: invalidate });
 	const remove = useMutation({ mutationFn: requestsRepo.deleteRequest, onSuccess: invalidate });
 
-	return { create, update, remove };
+	return { create, update, duplicate, reorder, remove };
 }
 
 export async function saveDraft(
