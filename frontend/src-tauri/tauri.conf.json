@@ -1,6 +1,6 @@
 {
 	"$schema": "https://schema.tauri.app/config/2",
-	"productName": "reqspec",
+	"productName": "ReqSpec",
 	"version": "1.0.0",
 	"identifier": "com.hyoretsu.reqspec",
 	"app": {
@@ -10,7 +10,7 @@
 		},
 		"windows": [
 			{
-				"title": "reqspec",
+				"title": "ReqSpec",
 				"width": 1280,
 				"height": 720,
 				"resizable": true,
@@ -20,8 +20,8 @@
 		"withGlobalTauri": true
 	},
 	"build": {
-		"beforeBuildCommand": "bun build",
-		"beforeDevCommand": "bun dev",
+		"beforeBuildCommand": "bun run build",
+		"beforeDevCommand": "bun run dev",
 		"devUrl": "http://localhost:5173",
 		"frontendDist": "../dist"
 	},

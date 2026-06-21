@@ -23,7 +23,7 @@ Uses `@tauri-apps/plugin-http`, which proxies the request through the Rust core 
 **bypasses browser CORS** — you can call any host, exactly like a desktop API client.
 
 Capability scope is open (`http://*`, `https://*`) in
-`frontend/src-tauri/src-tauri/capabilities/default.json`.
+`frontend/src-tauri/capabilities/default.json`.
 
 ## Web
 
