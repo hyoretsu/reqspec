@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { IconButton } from "@/components/ui";
 import { SortableItem, SortableList } from "@/components/ui/Sortable";
+import { CollectionVariablesModal } from "@/components/collections/CollectionsTree/CollectionVariablesModal";
 import { RequestNode } from "@/components/collections/CollectionsTree/RequestNode";
 import { useCollectionMutations, useFolders, useRequests } from "@/hooks/queries/use-collections";
 import { useFolderMutations } from "@/hooks/queries/use-folders";
@@ -10,6 +11,7 @@ import { confirmDialog, promptDialog } from "@/lib/ui/modal";
 
 export function CollectionNode({ collection }: { collection: CollectionRow }) {
 	const [expanded, setExpanded] = useState(true);
+	const [showVars, setShowVars] = useState(false);
 	const { data: requests } = useRequests(collection.id);
 	const { data: folders } = useFolders(collection.id);
 	const requestMutations = useRequestMutations(collection.id);
@@ -79,6 +81,9 @@ export function CollectionNode({ collection }: { collection: CollectionRow }) {
 					<IconButton label="Add folder" onClick={addFolder}>
 						🗀
 					</IconButton>
+					<IconButton label="Collection variables" onClick={() => setShowVars(true)}>
+						🔧
+					</IconButton>
 					<IconButton label="Rename collection" onClick={renameCollection}>
 						✎
 					</IconButton>
@@ -135,6 +140,8 @@ export function CollectionNode({ collection }: { collection: CollectionRow }) {
 					{all.length === 0 ? <p className="px-2 py-1 pl-6 text-xs text-muted">No requests</p> : null}
 				</div>
 			) : null}
+
+			{showVars ? <CollectionVariablesModal collection={collection} onClose={() => setShowVars(false)} /> : null}
 		</div>
 	);
 }

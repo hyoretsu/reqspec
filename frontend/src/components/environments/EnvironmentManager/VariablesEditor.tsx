@@ -16,6 +16,7 @@ export function VariablesEditor({ title, variables, onChange }: VariablesEditorP
 				onChange={onChange}
 				keyPlaceholder="variable"
 				valuePlaceholder="value"
+				allowSecret
 			/>
 		</section>
 	);

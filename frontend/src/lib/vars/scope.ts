@@ -14,10 +14,26 @@ function toRecord(vars: Variable[] | undefined): Record<string, string> {
 	return record;
 }
 
-/** Build a resolution scope from environment + global variables. Enabled only; env wins. */
-export function buildScope(envVars: Variable[] | undefined, globalVars: Variable[] | undefined): VarScope {
+export interface ScopeLayers {
+	/** Script-set, request-lifetime variables (highest precedence). */
+	local?: Variable[];
+	/** Collection-runner data variables. */
+	data?: Variable[];
+	environment?: Variable[];
+	collection?: Variable[];
+	globals?: Variable[];
+}
+
+/**
+ * Build a resolution scope from the variable layers. Enabled vars only.
+ * Precedence (high → low): local > data > environment > collection > global.
+ */
+export function buildScope(layers: ScopeLayers): VarScope {
 	return {
-		env: toRecord(envVars),
-		globals: toRecord(globalVars),
+		local: toRecord(layers.local),
+		data: toRecord(layers.data),
+		environment: toRecord(layers.environment),
+		collection: toRecord(layers.collection),
+		globals: toRecord(layers.globals),
 	};
 }

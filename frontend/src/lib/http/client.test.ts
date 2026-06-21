@@ -4,7 +4,13 @@ import type { HttpAdapter, RawHttpResponse, SerializedRequest } from "@/lib/http
 import { createEmptyRequest } from "@/lib/request/model";
 import type { VarScope } from "@/lib/vars/interpolate";
 
-const scope: VarScope = { env: { host: "api.example.com" }, globals: {} };
+const scope: VarScope = {
+	local: {},
+	data: {},
+	environment: { host: "api.example.com" },
+	collection: {},
+	globals: {},
+};
 
 function stubAdapter(capture: { req?: SerializedRequest }): HttpAdapter {
 	return async req => {

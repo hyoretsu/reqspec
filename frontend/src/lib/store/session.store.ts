@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { DEFAULT_WORKSPACE_ID } from "@/lib/db/types";
 
-export type MobilePane = "collections" | "request" | "response" | "history" | "environments";
+export type MobilePane = "collections" | "request" | "response" | "history" | "environments" | "cookies";
 
 interface SessionState {
 	activeWorkspaceId: string;

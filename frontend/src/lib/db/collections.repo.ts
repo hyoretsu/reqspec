@@ -1,8 +1,12 @@
 import { db } from "@/lib/db/db";
-import type { CollectionRow } from "@/lib/db/types";
+import type { CollectionRow, VariableRow } from "@/lib/db/types";
 
 export function listCollections(workspaceId: string): Promise<CollectionRow[]> {
 	return db.collections.where("workspaceId").equals(workspaceId).sortBy("order");
+}
+
+export function getCollection(id: string): Promise<CollectionRow | undefined> {
+	return db.collections.get(id);
 }
 
 export async function createCollection(workspaceId: string, name: string): Promise<CollectionRow> {
@@ -12,6 +16,7 @@ export async function createCollection(workspaceId: string, name: string): Promi
 		name,
 		createdAt: Date.now(),
 		order: await db.collections.where("workspaceId").equals(workspaceId).count(),
+		variables: [],
 	};
 	await db.collections.add(row);
 	return row;
@@ -19,6 +24,10 @@ export async function createCollection(workspaceId: string, name: string): Promi
 
 export async function renameCollection(id: string, name: string): Promise<void> {
 	await db.collections.update(id, { name });
+}
+
+export async function setCollectionVariables(id: string, variables: VariableRow[]): Promise<void> {
+	await db.collections.update(id, { variables });
 }
 
 export async function reorderCollections(orderedIds: string[]): Promise<void> {

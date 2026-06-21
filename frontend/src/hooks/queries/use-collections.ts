@@ -42,7 +42,12 @@ export function useCollectionMutations() {
 		onSuccess: invalidate,
 	});
 	const reorder = useMutation({ mutationFn: collectionsRepo.reorderCollections, onSuccess: invalidate });
+	const setVariables = useMutation({
+		mutationFn: ({ id, variables }: { id: string; variables: import("@/lib/db/types").VariableRow[] }) =>
+			collectionsRepo.setCollectionVariables(id, variables),
+		onSuccess: invalidate,
+	});
 	const remove = useMutation({ mutationFn: collectionsRepo.deleteCollection, onSuccess: invalidate });
 
-	return { create, rename, reorder, remove };
+	return { create, rename, reorder, setVariables, remove };
 }

@@ -8,6 +8,7 @@ export function KeyValueEditor({
 	onChange,
 	keyPlaceholder = "Key",
 	valuePlaceholder = "Value",
+	allowSecret,
 }: KeyValueEditorProps) {
 	const update = (id: string, next: KeyValue) =>
 		onChange(items.map(item => (item.id === id ? next : item)));
@@ -24,6 +25,7 @@ export function KeyValueEditor({
 					item={item}
 					keyPlaceholder={keyPlaceholder}
 					valuePlaceholder={valuePlaceholder}
+					allowSecret={allowSecret}
 					onChange={next => update(item.id, next)}
 					onRemove={() => remove(item.id)}
 				/>

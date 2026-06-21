@@ -19,6 +19,20 @@ export interface CollectionRow {
 	name: string;
 	createdAt: number;
 	order: number;
+	variables?: VariableRow[];
+}
+
+export interface CookieRow {
+	id: string;
+	domain: string;
+	path: string;
+	name: string;
+	value: string;
+	expires: number | null;
+	secure: boolean;
+	httpOnly: boolean;
+	sameSite: string | null;
+	createdAt: number;
 }
 
 export interface FolderRow {

@@ -7,18 +7,23 @@ function v(key: string, value: string, enabled = true): Variable {
 
 describe("buildScope", () => {
 	it("includes only enabled, non-empty-keyed variables", () => {
-		const scope = buildScope([v("a", "1"), v("b", "2", false), v("", "3")], undefined);
-		expect(scope.env).toEqual({ a: "1" });
+		const scope = buildScope({ environment: [v("a", "1"), v("b", "2", false), v("", "3")] });
+		expect(scope.environment).toEqual({ a: "1" });
 		expect(scope.globals).toEqual({});
 	});
 
-	it("separates env and global maps", () => {
-		const scope = buildScope([v("host", "env")], [v("host", "glob"), v("only", "g")]);
-		expect(scope.env).toEqual({ host: "env" });
-		expect(scope.globals).toEqual({ host: "glob", only: "g" });
+	it("separates the layers", () => {
+		const scope = buildScope({
+			environment: [v("host", "env")],
+			collection: [v("host", "col"), v("base", "c")],
+			globals: [v("only", "g")],
+		});
+		expect(scope.environment).toEqual({ host: "env" });
+		expect(scope.collection).toEqual({ host: "col", base: "c" });
+		expect(scope.globals).toEqual({ only: "g" });
 	});
 
-	it("handles undefined inputs", () => {
-		expect(buildScope(undefined, undefined)).toEqual({ env: {}, globals: {} });
+	it("handles an empty layer set", () => {
+		expect(buildScope({})).toEqual({ local: {}, data: {}, environment: {}, collection: {}, globals: {} });
 	});
 });

@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from "dexie";
 import {
 	type CollectionRow,
+	type CookieRow,
 	DEFAULT_WORKSPACE_ID,
 	type EnvironmentRow,
 	type FolderRow,
@@ -20,6 +21,7 @@ export class ReqspecDB extends Dexie {
 	globals!: EntityTable<GlobalsRow, "id">;
 	history!: EntityTable<HistoryRow, "id">;
 	tabs!: EntityTable<TabRow, "id">;
+	cookies!: EntityTable<CookieRow, "id">;
 
 	constructor() {
 		super("reqspec");
@@ -59,6 +61,18 @@ export class ReqspecDB extends Dexie {
 					.toCollection()
 					.modify(row => {
 						row.workspaceId = DEFAULT_WORKSPACE_ID;
+					});
+			});
+
+		// v3: cookie jar + collection-level variables.
+		this.version(3)
+			.stores({ cookies: "id, domain, name" })
+			.upgrade(async tx => {
+				await tx
+					.table<CollectionRow, string>("collections")
+					.toCollection()
+					.modify(row => {
+						row.variables = row.variables ?? [];
 					});
 			});
 	}

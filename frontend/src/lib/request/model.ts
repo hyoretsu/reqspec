@@ -8,6 +8,8 @@ export const keyValueSchema = z.object({
 	key: z.string(),
 	value: z.string(),
 	enabled: z.boolean(),
+	/** Variables only: mask the value in the UI and exclude from plain exports. */
+	secret: z.boolean().optional(),
 });
 export type KeyValue = z.infer<typeof keyValueSchema>;
 

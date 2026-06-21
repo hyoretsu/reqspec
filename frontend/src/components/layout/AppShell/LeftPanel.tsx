@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { Tabs, type TabItem } from "@/components/ui";
 import { CollectionsTree } from "@/components/collections/CollectionsTree";
+import { CookieManager } from "@/components/cookies/CookieManager";
 import { EnvironmentManager } from "@/components/environments/EnvironmentManager";
 import { HistoryList } from "@/components/history/HistoryList";
 
-type LeftTab = "collections" | "history" | "environments";
+type LeftTab = "collections" | "history" | "environments" | "cookies";
 
 const TABS: TabItem<LeftTab>[] = [
 	{ id: "collections", label: "Collections" },
 	{ id: "history", label: "History" },
 	{ id: "environments", label: "Env" },
+	{ id: "cookies", label: "Cookies" },
 ];
 
 /** Desktop-only left sidebar with internal tabs (mobile uses the bottom nav instead). */
@@ -23,6 +25,7 @@ export function LeftPanel() {
 				{tab === "collections" ? <CollectionsTree /> : null}
 				{tab === "history" ? <HistoryList /> : null}
 				{tab === "environments" ? <EnvironmentManager /> : null}
+				{tab === "cookies" ? <CookieManager /> : null}
 			</div>
 		</div>
 	);

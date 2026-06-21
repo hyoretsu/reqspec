@@ -42,9 +42,10 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 | History | ✅ | re-open past sends |
 | Environments + variables | ✅ | |
 | Global variables | ✅ | |
-| `{{variable}}` interpolation | ✅ | env > globals |
-| Dynamic variables (`{{$guid}}`, …) | ❌ | M3 |
-| Secret/masked variables | ❌ | M3 |
+| `{{variable}}` interpolation | ✅ | local > data > env > collection > global |
+| Collection-scoped variables | ✅ | per-collection editor |
+| Dynamic variables (`{{$guid}}`, …) | ✅ | guid/timestamp/random* set |
+| Secret/masked variables | ✅ | per-variable secret toggle |
 | Request description / docs (markdown) | ✅ | Docs tab, sanitized preview |
 | Multiple request tabs | ✅ | persisted per workspace |
 | Command palette / global search | ✅ | Cmd/Ctrl+K |
@@ -80,7 +81,7 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 | Collection Runner + data files | ❌ | |
 | Mock servers | ❌ | |
 | Monitors | ❌ | |
-| Cookie jar editor | ❌ | response cookies are shown read-only |
+| Cookie jar editor | ✅ | auto-capture Set-Cookie, auto-send, per-domain manager |
 | Proxy / SSL cert config | ❌ | |
 
 ## Protocols beyond HTTP
@@ -104,10 +105,10 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 ## Roadmap
 
 Full sequenced plan: `~/.claude/plans/this-app-is-basically-peppy-floyd.md`.
-M2 (workspaces, tabs, folders, docs, examples, search) is **done**. Next:
+M2 (workspaces, tabs, folders, docs, examples, search) and M3 (variable scopes,
+dynamic vars, secret vars, cookie jar) are **done**. Next:
 
-1. **M3** — variable scopes + dynamic vars + secret vars + cookie jar.
-2. **M4** — auth parity (API key, OAuth 2.0, AWS SigV4, digest, …).
-3. **M5** — body parity (GraphQL, file upload, binary).
-4. **M6** — pre-request & test scripts (QuickJS) — the biggest functional gap.
-5. **M7–M10** — runner, mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.
+1. **M4** — auth parity (API key, OAuth 2.0, AWS SigV4, digest, …).
+2. **M5** — body parity (GraphQL, file upload, binary).
+3. **M6** — pre-request & test scripts (QuickJS) — the biggest functional gap.
+4. **M7–M10** — runner, mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.

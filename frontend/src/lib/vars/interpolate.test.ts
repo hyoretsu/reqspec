@@ -2,10 +2,15 @@ import { describe, expect, it } from "bun:test";
 import { createEmptyRequest, type KeyValue } from "@/lib/request/model";
 import { interpolate, interpolateRequest, type VarScope } from "@/lib/vars/interpolate";
 
-const scope: VarScope = {
-	env: { host: "api.example.com", token: "env-token" },
+function makeScope(partial: Partial<VarScope>): VarScope {
+	return { local: {}, data: {}, environment: {}, collection: {}, globals: {}, ...partial };
+}
+
+const scope = makeScope({
+	environment: { host: "api.example.com", token: "env-token" },
+	collection: { host: "collection-host", base: "/v1" },
 	globals: { host: "global.example.com", version: "v1" },
-};
+});
 
 function kv(key: string, value: string, enabled = true): KeyValue {
 	return { id: crypto.randomUUID(), key, value, enabled };
@@ -16,33 +21,48 @@ describe("interpolate", () => {
 		expect(interpolate("https://{{host}}/users", scope)).toBe("https://api.example.com/users");
 	});
 
-	it("prefers env over globals", () => {
+	it("honors precedence environment > collection > global", () => {
 		expect(interpolate("{{host}}", scope)).toBe("api.example.com");
+		expect(interpolate("{{base}}", scope)).toBe("/v1");
+		expect(interpolate("{{version}}", scope)).toBe("v1");
 	});
 
-	it("falls back to globals when env lacks the key", () => {
-		expect(interpolate("{{version}}", scope)).toBe("v1");
+	it("respects local > data > environment ordering", () => {
+		const layered = makeScope({
+			local: { x: "local" },
+			data: { x: "data", y: "data-y" },
+			environment: { x: "env", y: "env-y", z: "env-z" },
+		});
+		expect(interpolate("{{x}}", layered)).toBe("local");
+		expect(interpolate("{{y}}", layered)).toBe("data-y");
+		expect(interpolate("{{z}}", layered)).toBe("env-z");
 	});
 
 	it("leaves unknown variables literal", () => {
 		expect(interpolate("{{missing}}", scope)).toBe("{{missing}}");
 	});
 
-	it("resolves adjacent variables", () => {
-		expect(interpolate("{{host}}{{version}}", scope)).toBe("api.example.comv1");
+	it("resolves a known dynamic variable", () => {
+		const out = interpolate("{{$timestamp}}", scope);
+		expect(out).toMatch(/^\d+$/);
 	});
 
-	it("tolerates internal whitespace in the token", () => {
-		expect(interpolate("{{ host }}", scope)).toBe("api.example.com");
+	it("lets a user variable override a dynamic name", () => {
+		const overridden = makeScope({ environment: { $timestamp: "fixed" } });
+		expect(interpolate("{{$timestamp}}", overridden)).toBe("fixed");
+	});
+
+	it("leaves an unknown dynamic variable literal", () => {
+		expect(interpolate("{{$nope}}", scope)).toBe("{{$nope}}");
+	});
+
+	it("resolves adjacent variables and trims whitespace", () => {
+		expect(interpolate("{{ host }}{{version}}", scope)).toBe("api.example.comv1");
 	});
 
 	it("does not re-expand resolved values (single pass)", () => {
-		const nested: VarScope = { env: { a: "{{b}}", b: "deep" }, globals: {} };
+		const nested = makeScope({ environment: { a: "{{b}}", b: "deep" } });
 		expect(interpolate("{{a}}", nested)).toBe("{{b}}");
-	});
-
-	it("returns plain strings unchanged", () => {
-		expect(interpolate("no vars here", scope)).toBe("no vars here");
 	});
 });
 

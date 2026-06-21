@@ -3,6 +3,7 @@ import { BottomNav } from "@/components/layout/AppShell/BottomNav";
 import { LeftPanel } from "@/components/layout/AppShell/LeftPanel";
 import { TopBar } from "@/components/layout/AppShell/TopBar";
 import { CollectionsTree } from "@/components/collections/CollectionsTree";
+import { CookieManager } from "@/components/cookies/CookieManager";
 import { EnvironmentManager } from "@/components/environments/EnvironmentManager";
 import { HistoryList } from "@/components/history/HistoryList";
 import { CommandPalette } from "@/components/layout/CommandPalette";
@@ -51,6 +52,7 @@ export function AppShell() {
 							{activePane === "request" ? <RequestBuilder /> : null}
 							{activePane === "response" ? <ResponseViewer /> : null}
 							{activePane === "environments" ? <EnvironmentManager /> : null}
+							{activePane === "cookies" ? <CookieManager /> : null}
 							{activePane === "history" ? <HistoryList /> : null}
 						</div>
 					</main>

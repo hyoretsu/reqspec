@@ -1,21 +1,31 @@
 import type { BodyDescriptor, KeyValue, RequestModel } from "@/lib/request/model";
+import { resolveDynamic } from "@/lib/vars/dynamic";
 
 export interface VarScope {
-	env: Record<string, string>;
+	local: Record<string, string>;
+	data: Record<string, string>;
+	environment: Record<string, string>;
+	collection: Record<string, string>;
 	globals: Record<string, string>;
 }
 
 const VAR_PATTERN = /\{\{\s*([^{}\s]+)\s*\}\}/g;
 
+/** Highest → lowest precedence. */
+const LAYER_ORDER: (keyof VarScope)[] = ["local", "data", "environment", "collection", "globals"];
+
 /**
- * Resolve `{{var}}` tokens in a template. Precedence: env > globals.
- * Unknown variables are left literal. Single pass — resolved values are not re-expanded.
+ * Resolve `{{var}}` tokens. Precedence: local > data > environment > collection > global,
+ * then `{{$dynamic}}` variables. Unknown tokens are left literal. Single pass — resolved
+ * values are not re-expanded.
  */
 export function interpolate(template: string, scope: VarScope): string {
 	return template.replace(VAR_PATTERN, (match, name: string) => {
-		if (name in scope.env) return scope.env[name];
-		if (name in scope.globals) return scope.globals[name];
-		return match;
+		for (const layer of LAYER_ORDER) {
+			if (name in scope[layer]) return scope[layer][name];
+		}
+		const dynamic = resolveDynamic(name);
+		return dynamic ?? match;
 	});
 }
 

@@ -6,6 +6,7 @@ const ITEMS: { pane: MobilePane; label: string; icon: string }[] = [
 	{ pane: "request", label: "Request", icon: "✏️" },
 	{ pane: "response", label: "Response", icon: "📥" },
 	{ pane: "environments", label: "Env", icon: "🧩" },
+	{ pane: "cookies", label: "Cookies", icon: "🍪" },
 	{ pane: "history", label: "History", icon: "🕘" },
 ];
 
