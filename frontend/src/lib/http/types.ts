@@ -5,7 +5,7 @@ export interface SerializedRequest {
 	method: HttpMethod;
 	url: string;
 	headers: Record<string, string>;
-	body: string | FormData | undefined;
+	body: string | FormData | Blob | undefined;
 }
 
 /** Raw shape every adapter produces before normalization. */

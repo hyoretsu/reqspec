@@ -20,9 +20,9 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 | Headers (enable/disable) | ✅ | |
 | Request body: raw (JSON/text) | ✅ | raw + **visual JSON tree builder**, prettify/minify/validate |
 | Request body: x-www-form-urlencoded | ✅ | |
-| Request body: form-data | 🟡 | text fields; file upload ❌ (M5b) |
+| Request body: form-data | ✅ | text + **file** fields (per-row text/file toggle) |
 | Request body: GraphQL | ✅ | query + variables (tree or raw) |
-| Request body: binary | ❌ | M5b |
+| Request body: binary | ✅ | single file, content-type override |
 | JSON datetime fields (ISO 8601 / Unix) | ✅ | format specifier in the JSON builder |
 | Insert `{{var}}` / dynamic into values | ✅ | |
 | Response viewer (status/time/size) | ✅ | |
@@ -111,13 +111,14 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 
 Full sequenced plan: `~/.claude/plans/this-app-is-basically-peppy-floyd.md`.
 M2 (workspaces, tabs, folders, docs, examples, search), M3 (variable scopes,
-dynamic vars, secret vars, cookie jar), and M4 (API key, AWS SigV4, OAuth 2.0
-non-interactive) are **done**. Next:
+dynamic vars, secret vars, cookie jar), M4 (API key, AWS SigV4, OAuth 2.0
+non-interactive), and M5 (body parity) are **done**. Next:
 
-1. **M5b** — file upload + binary body (cross-platform file handling).
-2. **M6** — pre-request & test scripts (QuickJS) — the biggest functional gap.
-3. **M7–M10** — runner, mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.
-4. **Deferred auth** — OAuth 2.0 interactive auth-code+PKCE (redirect infra), Digest, NTLM, Hawk.
+1. **M6** — pre-request & test scripts (QuickJS) — the biggest functional gap.
+2. **M7–M10** — runner, mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.
+3. **Deferred auth** — OAuth 2.0 interactive auth-code+PKCE (redirect infra), Digest, NTLM, Hawk.
 
 M5a (visual JSON builder, datetime/format fields, insert-variable, GraphQL,
-prettify/validate) is **done**.
+prettify/validate) and M5b (form-data file upload + binary body, via a
+session-only in-memory file store — files aren't persisted across reloads) are
+**done**.

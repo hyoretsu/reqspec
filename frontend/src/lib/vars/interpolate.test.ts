@@ -96,4 +96,11 @@ describe("interpolateRequest", () => {
 		expect(out.body).toEqual({ type: "urlencoded", fields: [{ ...req.body.fields[0], value: "v1" }] });
 		expect(out.auth).toEqual({ type: "none" });
 	});
+
+	it("interpolates a binary body's content-type", () => {
+		const req = createEmptyRequest();
+		req.body = { type: "binary", fileId: "f", fileName: "a.bin", contentType: "application/{{version}}" };
+		const out = interpolateRequest(req, scope);
+		expect(out.body).toEqual({ type: "binary", fileId: "f", fileName: "a.bin", contentType: "application/v1" });
+	});
 });

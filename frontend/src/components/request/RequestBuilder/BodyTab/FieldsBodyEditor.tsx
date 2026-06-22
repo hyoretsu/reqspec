@@ -2,9 +2,10 @@ import { KeyValueEditor } from "@/components/ui";
 import { useActiveRequestStore } from "@/lib/store/active-request.store";
 import type { BodyDescriptor, KeyValue } from "@/lib/request/model";
 
-type FieldsBody = Extract<BodyDescriptor, { type: "form-data" | "urlencoded" }>;
+type FieldsBody = Extract<BodyDescriptor, { type: "urlencoded" }>;
 
-/** Shared editor for the two field-based body types (form-data, urlencoded). */
+/** Editor for the urlencoded body type (plain key/value pairs). Form-data has its own
+ * editor since its rows can also hold files. */
 export function FieldsBodyEditor({ body }: { body: FieldsBody }) {
 	const patchDraft = useActiveRequestStore(state => state.patchDraft);
 

@@ -50,6 +50,9 @@ function interpolateBody(body: BodyDescriptor, scope: VarScope): BodyDescriptor 
 				query: interpolate(body.query, scope),
 				variables: interpolate(body.variables, scope),
 			};
+		case "binary":
+			// File bytes carry no variables; the content-type may.
+			return { ...body, contentType: interpolate(body.contentType, scope) };
 		default:
 			return body;
 	}

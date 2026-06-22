@@ -1,5 +1,7 @@
 import { CustomSelect, type SelectOption } from "@/components/ui";
+import { BinaryBodyEditor } from "@/components/request/RequestBuilder/BodyTab/BinaryBodyEditor";
 import { FieldsBodyEditor } from "@/components/request/RequestBuilder/BodyTab/FieldsBodyEditor";
+import { FormDataEditor } from "@/components/request/RequestBuilder/BodyTab/FormDataEditor";
 import { GraphQLBodyEditor } from "@/components/request/RequestBuilder/BodyTab/GraphQLBodyEditor";
 import { RawBodyEditor } from "@/components/request/RequestBuilder/BodyTab/RawBodyEditor";
 import { useActiveRequestStore } from "@/lib/store/active-request.store";
@@ -11,6 +13,7 @@ const BODY_OPTIONS: SelectOption<BodyType>[] = [
 	{ label: "Form Data", value: "form-data" },
 	{ label: "URL Encoded", value: "urlencoded" },
 	{ label: "GraphQL", value: "graphql" },
+	{ label: "Binary", value: "binary" },
 ];
 
 function defaultBody(type: BodyType): BodyDescriptor {
@@ -23,6 +26,8 @@ function defaultBody(type: BodyType): BodyDescriptor {
 			return { type: "urlencoded", fields: [] };
 		case "graphql":
 			return { type: "graphql", query: "", variables: "" };
+		case "binary":
+			return { type: "binary", fileId: crypto.randomUUID(), fileName: "", contentType: "" };
 		default:
 			return { type: "none" };
 	}
@@ -49,8 +54,10 @@ export function BodyTab() {
 			/>
 
 			{body.type === "raw" ? <RawBodyEditor body={body} /> : null}
-			{body.type === "form-data" || body.type === "urlencoded" ? <FieldsBodyEditor body={body} /> : null}
+			{body.type === "form-data" ? <FormDataEditor body={body} /> : null}
+			{body.type === "urlencoded" ? <FieldsBodyEditor body={body} /> : null}
 			{body.type === "graphql" ? <GraphQLBodyEditor body={body} /> : null}
+			{body.type === "binary" ? <BinaryBodyEditor body={body} /> : null}
 			{body.type === "none" ? <p className="text-xs text-muted">This request has no body.</p> : null}
 		</div>
 	);

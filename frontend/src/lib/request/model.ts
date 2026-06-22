@@ -10,6 +10,10 @@ export const keyValueSchema = z.object({
 	enabled: z.boolean(),
 	/** Variables only: mask the value in the UI and exclude from plain exports. */
 	secret: z.boolean().optional(),
+	/** form-data only: "file" rows send a picked file (held in the session file store). */
+	kind: z.enum(["text", "file"]).optional(),
+	/** form-data file rows: the selected file's name (the bytes live in the file store). */
+	fileName: z.string().optional(),
 });
 export type KeyValue = z.infer<typeof keyValueSchema>;
 
@@ -23,6 +27,15 @@ export const bodyDescriptorSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("form-data"), fields: z.array(keyValueSchema) }),
 	z.object({ type: z.literal("urlencoded"), fields: z.array(keyValueSchema) }),
 	z.object({ type: z.literal("graphql"), query: z.string(), variables: z.string() }),
+	z.object({
+		type: z.literal("binary"),
+		/** Key into the session file store holding the picked file's bytes. */
+		fileId: z.string(),
+		/** Display name of the picked file (the bytes live in the file store). */
+		fileName: z.string(),
+		/** Sent as Content-Type; defaults to the file's own MIME type when blank. */
+		contentType: z.string(),
+	}),
 ]);
 export type BodyDescriptor = z.infer<typeof bodyDescriptorSchema>;
 export type BodyType = BodyDescriptor["type"];

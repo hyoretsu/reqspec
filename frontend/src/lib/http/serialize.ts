@@ -1,3 +1,4 @@
+import { getFile } from "@/lib/files/file-store";
 import type { KeyValue, RequestModel } from "@/lib/request/model";
 import { applyPathParams } from "@/lib/request/url";
 import type { SerializedRequest } from "@/lib/http/types";
@@ -40,7 +41,7 @@ export function serializeRequest(req: RequestModel): SerializedRequest {
 		else extraQuery.push([auth.key, auth.value]);
 	}
 
-	let body: string | FormData | undefined;
+	let body: string | FormData | Blob | undefined;
 	switch (req.body.type) {
 		case "raw": {
 			body = req.body.content;
@@ -60,9 +61,28 @@ export function serializeRequest(req: RequestModel): SerializedRequest {
 		}
 		case "form-data": {
 			const form = new FormData();
-			for (const [k, v] of enabledPairs(req.body.fields)) form.append(k, v);
+			for (const field of req.body.fields) {
+				if (!field.enabled || field.key === "") continue;
+				if (field.kind === "file") {
+					const file = getFile(field.id);
+					if (file) form.append(field.key, file, field.fileName ?? file.name);
+				} else {
+					form.append(field.key, field.value);
+				}
+			}
 			body = form;
 			// Content-Type (with boundary) is set by the transport for FormData.
+			break;
+		}
+		case "binary": {
+			const file = getFile(req.body.fileId);
+			if (file) {
+				body = file;
+				if (!hasHeader(headers, "content-type")) {
+					const type = req.body.contentType !== "" ? req.body.contentType : file.type;
+					if (type !== "") headers["Content-Type"] = type;
+				}
+			}
 			break;
 		}
 		case "graphql": {

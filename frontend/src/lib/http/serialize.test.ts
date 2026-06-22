@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { setFile } from "@/lib/files/file-store";
 import { serializeRequest } from "@/lib/http/serialize";
 import { createEmptyRequest, type KeyValue } from "@/lib/request/model";
 
@@ -120,6 +121,55 @@ describe("serializeRequest", () => {
 		const req = createEmptyRequest();
 		req.body = { type: "graphql", query: "q", variables: "not json" };
 		expect(JSON.parse(serializeRequest(req).body as string).variables).toEqual({});
+	});
+
+	it("appends a picked file to form-data using its row id", () => {
+		const file = new File(["bytes"], "upload.bin", { type: "application/octet-stream" });
+		setFile("row-1", file);
+		const req = createEmptyRequest();
+		req.body = {
+			type: "form-data",
+			fields: [{ id: "row-1", key: "doc", value: "", enabled: true, kind: "file", fileName: "upload.bin" }],
+		};
+		const out = serializeRequest(req);
+		expect(out.body).toBeInstanceOf(FormData);
+		expect((out.body as FormData).get("doc")).toBeInstanceOf(File);
+		expect(((out.body as FormData).get("doc") as File).name).toBe("upload.bin");
+	});
+
+	it("skips a file row whose file is no longer in the store", () => {
+		const req = createEmptyRequest();
+		req.body = {
+			type: "form-data",
+			fields: [{ id: "absent", key: "doc", value: "", enabled: true, kind: "file" }],
+		};
+		expect([...(serializeRequest(req).body as FormData).keys()]).toEqual([]);
+	});
+
+	it("sends a binary body as the picked file with its content-type", () => {
+		const file = new File(["raw"], "image.png", { type: "image/png" });
+		setFile("bin-1", file);
+		const req = createEmptyRequest();
+		req.body = { type: "binary", fileId: "bin-1", fileName: "image.png", contentType: "image/png" };
+		const out = serializeRequest(req);
+		expect(out.body).toBe(file);
+		expect(out.headers["Content-Type"]).toBe("image/png");
+	});
+
+	it("falls back to the file's own MIME type when binary content-type is blank", () => {
+		const file = new File(["raw"], "image.png", { type: "image/png" });
+		setFile("bin-2", file);
+		const req = createEmptyRequest();
+		req.body = { type: "binary", fileId: "bin-2", fileName: "image.png", contentType: "" };
+		expect(serializeRequest(req).headers["Content-Type"]).toBe("image/png");
+	});
+
+	it("leaves a binary body undefined when no file is picked", () => {
+		const req = createEmptyRequest();
+		req.body = { type: "binary", fileId: "bin-missing", fileName: "", contentType: "" };
+		const out = serializeRequest(req);
+		expect(out.body).toBeUndefined();
+		expect(out.headers["Content-Type"]).toBeUndefined();
 	});
 
 	it("leaves body undefined for none", () => {
