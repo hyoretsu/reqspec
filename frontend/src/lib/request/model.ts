@@ -22,6 +22,7 @@ export const bodyDescriptorSchema = z.discriminatedUnion("type", [
 	}),
 	z.object({ type: z.literal("form-data"), fields: z.array(keyValueSchema) }),
 	z.object({ type: z.literal("urlencoded"), fields: z.array(keyValueSchema) }),
+	z.object({ type: z.literal("graphql"), query: z.string(), variables: z.string() }),
 ]);
 export type BodyDescriptor = z.infer<typeof bodyDescriptorSchema>;
 

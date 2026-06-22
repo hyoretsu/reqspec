@@ -100,6 +100,20 @@ describe("serializeRequest", () => {
 		expect(out.headers["Content-Type"]).toBeUndefined();
 	});
 
+	it("serializes a GraphQL body as JSON with parsed variables", () => {
+		const req = createEmptyRequest();
+		req.body = { type: "graphql", query: "query { me }", variables: '{"id":1}' };
+		const out = serializeRequest(req);
+		expect(out.headers["Content-Type"]).toBe("application/json");
+		expect(JSON.parse(out.body as string)).toEqual({ query: "query { me }", variables: { id: 1 } });
+	});
+
+	it("defaults GraphQL variables to {} when blank or invalid", () => {
+		const req = createEmptyRequest();
+		req.body = { type: "graphql", query: "q", variables: "not json" };
+		expect(JSON.parse(serializeRequest(req).body as string).variables).toEqual({});
+	});
+
 	it("leaves body undefined for none", () => {
 		expect(serializeRequest(createEmptyRequest()).body).toBeUndefined();
 	});

@@ -18,10 +18,13 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 | Send HTTP request (all methods) | ✅ | GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS |
 | Query params (enable/disable) | ✅ | |
 | Headers (enable/disable) | ✅ | |
-| Request body: raw (JSON/text) | ✅ | |
+| Request body: raw (JSON/text) | ✅ | raw + **visual JSON tree builder**, prettify/minify/validate |
 | Request body: x-www-form-urlencoded | ✅ | |
-| Request body: form-data | 🟡 | text fields; file upload ❌ |
-| Request body: GraphQL / binary | ❌ | |
+| Request body: form-data | 🟡 | text fields; file upload ❌ (M5b) |
+| Request body: GraphQL | ✅ | query + variables (tree or raw) |
+| Request body: binary | ❌ | M5b |
+| JSON datetime fields (ISO 8601 / Unix) | ✅ | format specifier in the JSON builder |
+| Insert `{{var}}` / dynamic into values | ✅ | |
 | Response viewer (status/time/size) | ✅ | |
 | Response body pretty/raw | 🟡 | JSON pretty-print; no syntax highlighting yet |
 | Response headers / cookies | ✅ | |
@@ -111,7 +114,10 @@ M2 (workspaces, tabs, folders, docs, examples, search), M3 (variable scopes,
 dynamic vars, secret vars, cookie jar), and M4 (API key, AWS SigV4, OAuth 2.0
 non-interactive) are **done**. Next:
 
-1. **M5** — body parity (GraphQL, file upload, binary).
+1. **M5b** — file upload + binary body (cross-platform file handling).
 2. **M6** — pre-request & test scripts (QuickJS) — the biggest functional gap.
 3. **M7–M10** — runner, mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.
 4. **Deferred auth** — OAuth 2.0 interactive auth-code+PKCE (redirect infra), Digest, NTLM, Hawk.
+
+M5a (visual JSON builder, datetime/format fields, insert-variable, GraphQL,
+prettify/validate) is **done**.

@@ -64,6 +64,17 @@ export function serializeRequest(req: RequestModel): SerializedRequest {
 			// Content-Type (with boundary) is set by the transport for FormData.
 			break;
 		}
+		case "graphql": {
+			let variables: unknown = {};
+			try {
+				variables = req.body.variables.trim() === "" ? {} : JSON.parse(req.body.variables);
+			} catch {
+				variables = {};
+			}
+			body = JSON.stringify({ query: req.body.query, variables });
+			if (!hasHeader(headers, "content-type")) headers["Content-Type"] = "application/json";
+			break;
+		}
 		default:
 			body = undefined;
 	}

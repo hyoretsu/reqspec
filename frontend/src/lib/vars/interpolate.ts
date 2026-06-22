@@ -44,6 +44,12 @@ function interpolateBody(body: BodyDescriptor, scope: VarScope): BodyDescriptor 
 		case "form-data":
 		case "urlencoded":
 			return { ...body, fields: interpolateKeyValues(body.fields, scope) };
+		case "graphql":
+			return {
+				...body,
+				query: interpolate(body.query, scope),
+				variables: interpolate(body.variables, scope),
+			};
 		default:
 			return body;
 	}

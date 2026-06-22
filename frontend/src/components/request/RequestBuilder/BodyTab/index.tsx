@@ -1,5 +1,6 @@
 import { CustomSelect, type SelectOption } from "@/components/ui";
 import { FieldsBodyEditor } from "@/components/request/RequestBuilder/BodyTab/FieldsBodyEditor";
+import { GraphQLBodyEditor } from "@/components/request/RequestBuilder/BodyTab/GraphQLBodyEditor";
 import { RawBodyEditor } from "@/components/request/RequestBuilder/BodyTab/RawBodyEditor";
 import { useActiveRequestStore } from "@/lib/store/active-request.store";
 import type { BodyDescriptor } from "@/lib/request/model";
@@ -11,6 +12,7 @@ const BODY_OPTIONS: SelectOption<BodyType>[] = [
 	{ label: "Raw", value: "raw" },
 	{ label: "Form Data", value: "form-data" },
 	{ label: "URL Encoded", value: "urlencoded" },
+	{ label: "GraphQL", value: "graphql" },
 ];
 
 function defaultBody(type: BodyType): BodyDescriptor {
@@ -21,6 +23,8 @@ function defaultBody(type: BodyType): BodyDescriptor {
 			return { type: "form-data", fields: [] };
 		case "urlencoded":
 			return { type: "urlencoded", fields: [] };
+		case "graphql":
+			return { type: "graphql", query: "", variables: "" };
 		default:
 			return { type: "none" };
 	}
@@ -42,6 +46,7 @@ export function BodyTab() {
 
 			{body.type === "raw" ? <RawBodyEditor body={body} /> : null}
 			{body.type === "form-data" || body.type === "urlencoded" ? <FieldsBodyEditor body={body} /> : null}
+			{body.type === "graphql" ? <GraphQLBodyEditor body={body} /> : null}
 			{body.type === "none" ? <p className="text-xs text-muted">This request has no body.</p> : null}
 		</div>
 	);
