@@ -118,7 +118,8 @@ would modify the previous commit).
 secrets or large binaries.
 - Don't commit files that look like secrets (.env, credentials.json, *.pem). If
 the user explicitly asks, warn first.
-- For commit messages, use a HEREDOC to preserve formatting.
+- For commit messages, use a HEREDOC to preserve formatting. End the trailer with:
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 - Don't push unless asked. Never force-push to main/master; warn if asked.
 - For PRs, use `gh` via Bash. Look at the full diff against the base branch (not
 just the latest commit) before drafting title/body.
