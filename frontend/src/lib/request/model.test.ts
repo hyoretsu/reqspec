@@ -1,5 +1,12 @@
 import { describe, expect, it } from "bun:test";
-import { createEmptyRequest, createKeyValue, requestModelSchema } from "@/lib/request/model";
+import {
+	type BodyDescriptor,
+	type BodyType,
+	createEmptyRequest,
+	createKeyValue,
+	requestModelSchema,
+	switchVariant,
+} from "@/lib/request/model";
 
 describe("createEmptyRequest", () => {
 	it("produces a valid default GET request", () => {
@@ -48,5 +55,48 @@ describe("requestModelSchema", () => {
 			auth: { type: "bearer" as const, token: "t" },
 		};
 		expect(requestModelSchema.safeParse(req).success).toBe(true);
+	});
+
+	it("accepts stashed body/auth drafts", () => {
+		const req = {
+			...createEmptyRequest(),
+			bodyDrafts: { raw: { type: "raw" as const, subtype: "json" as const, content: "{}" } },
+			authDrafts: { bearer: { type: "bearer" as const, token: "t" } },
+		};
+		expect(requestModelSchema.safeParse(req).success).toBe(true);
+	});
+});
+
+describe("switchVariant", () => {
+	const defaultBody = (type: BodyType): BodyDescriptor => {
+		switch (type) {
+			case "raw":
+				return { type: "raw", subtype: "json", content: "" };
+			case "form-data":
+				return { type: "form-data", fields: [] };
+			default:
+				return { type: "none" };
+		}
+	};
+
+	it("stashes the outgoing variant and defaults a fresh incoming one", () => {
+		const current: BodyDescriptor = { type: "raw", subtype: "json", content: '{"a":1}' };
+		const { value, drafts } = switchVariant(current, "form-data", undefined, defaultBody);
+		expect(value).toEqual({ type: "form-data", fields: [] });
+		expect(drafts.raw).toEqual(current);
+	});
+
+	it("restores a previously stashed variant instead of defaulting", () => {
+		const stashed: BodyDescriptor = { type: "raw", subtype: "json", content: '{"a":1}' };
+		const current: BodyDescriptor = { type: "form-data", fields: [] };
+		const { value } = switchVariant(current, "raw", { raw: stashed }, defaultBody);
+		expect(value).toEqual(stashed);
+	});
+
+	it("round-trips without losing data (raw → form-data → raw)", () => {
+		const raw: BodyDescriptor = { type: "raw", subtype: "json", content: '{"keep":true}' };
+		const step1 = switchVariant(raw, "form-data", undefined, defaultBody);
+		const step2 = switchVariant(step1.value, "raw", step1.drafts, defaultBody);
+		expect(step2.value).toEqual(raw);
 	});
 });

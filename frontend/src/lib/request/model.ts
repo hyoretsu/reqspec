@@ -25,6 +25,7 @@ export const bodyDescriptorSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("graphql"), query: z.string(), variables: z.string() }),
 ]);
 export type BodyDescriptor = z.infer<typeof bodyDescriptorSchema>;
+export type BodyType = BodyDescriptor["type"];
 
 export const authDescriptorSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("none") }),
@@ -58,6 +59,7 @@ export const authDescriptorSchema = z.discriminatedUnion("type", [
 	}),
 ]);
 export type AuthDescriptor = z.infer<typeof authDescriptorSchema>;
+export type AuthType = AuthDescriptor["type"];
 
 export const requestModelSchema = z.object({
 	method: z.enum(HTTP_METHODS),
@@ -66,8 +68,35 @@ export const requestModelSchema = z.object({
 	headers: z.array(keyValueSchema),
 	body: bodyDescriptorSchema,
 	auth: authDescriptorSchema,
+	/**
+	 * Stashed content of every body/auth variant the user has edited, keyed by its
+	 * `type`. Lets switching the body/auth type preserve the data of the type left
+	 * behind, so going back restores it instead of an empty default. See {@link switchVariant}.
+	 */
+	bodyDrafts: z.record(z.string(), bodyDescriptorSchema).optional(),
+	authDrafts: z.record(z.string(), authDescriptorSchema).optional(),
 });
 export type RequestModel = z.infer<typeof requestModelSchema>;
+
+/** A cache of every variant a discriminated config has held, keyed by its `type`. */
+export type VariantDrafts<T extends { type: string }> = Record<string, T>;
+
+/**
+ * Switch a discriminated config (body/auth) to another `type` without losing the
+ * data of the one being left. The outgoing variant is stashed into `drafts`; the
+ * incoming variant is restored from `drafts` if previously edited, else freshly
+ * defaulted. Returns the new active value and the updated draft cache.
+ */
+export function switchVariant<T extends { type: string }>(
+	current: T,
+	nextType: T["type"],
+	drafts: VariantDrafts<T> | undefined,
+	makeDefault: (type: T["type"]) => T,
+): { value: T; drafts: VariantDrafts<T> } {
+	const nextDrafts: VariantDrafts<T> = { ...drafts, [current.type]: current };
+	const value = nextDrafts[nextType] ?? makeDefault(nextType);
+	return { value, drafts: nextDrafts };
+}
 
 export function createKeyValue(partial: Partial<Omit<KeyValue, "id">> = {}): KeyValue {
 	return {

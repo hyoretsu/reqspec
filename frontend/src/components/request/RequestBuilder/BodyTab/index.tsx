@@ -3,9 +3,7 @@ import { FieldsBodyEditor } from "@/components/request/RequestBuilder/BodyTab/Fi
 import { GraphQLBodyEditor } from "@/components/request/RequestBuilder/BodyTab/GraphQLBodyEditor";
 import { RawBodyEditor } from "@/components/request/RequestBuilder/BodyTab/RawBodyEditor";
 import { useActiveRequestStore } from "@/lib/store/active-request.store";
-import type { BodyDescriptor } from "@/lib/request/model";
-
-type BodyType = BodyDescriptor["type"];
+import { type BodyDescriptor, type BodyType, switchVariant } from "@/lib/request/model";
 
 const BODY_OPTIONS: SelectOption<BodyType>[] = [
 	{ label: "None", value: "none" },
@@ -32,7 +30,13 @@ function defaultBody(type: BodyType): BodyDescriptor {
 
 export function BodyTab() {
 	const body = useActiveRequestStore(state => state.draft.body);
+	const bodyDrafts = useActiveRequestStore(state => state.draft.bodyDrafts);
 	const patchDraft = useActiveRequestStore(state => state.patchDraft);
+
+	const onTypeChange = (type: BodyType) => {
+		const { value, drafts } = switchVariant(body, type, bodyDrafts, defaultBody);
+		patchDraft({ body: value, bodyDrafts: drafts });
+	};
 
 	return (
 		<div className="flex flex-col gap-3">
@@ -40,7 +44,7 @@ export function BodyTab() {
 				aria-label="Body type"
 				value={body.type}
 				options={BODY_OPTIONS}
-				onChange={type => patchDraft({ body: defaultBody(type) })}
+				onChange={onTypeChange}
 				className="w-40"
 			/>
 

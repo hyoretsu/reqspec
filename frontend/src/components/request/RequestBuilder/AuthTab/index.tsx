@@ -3,8 +3,9 @@ import { ApiKeyAuthForm } from "@/components/request/RequestBuilder/AuthTab/ApiK
 import { AwsAuthForm } from "@/components/request/RequestBuilder/AuthTab/AwsAuthForm";
 import { BasicAuthForm } from "@/components/request/RequestBuilder/AuthTab/BasicAuthForm";
 import { BearerAuthForm } from "@/components/request/RequestBuilder/AuthTab/BearerAuthForm";
-import { type AuthType, defaultAuth } from "@/components/request/RequestBuilder/AuthTab/defaults";
+import { defaultAuth } from "@/components/request/RequestBuilder/AuthTab/defaults";
 import { OAuth2AuthForm } from "@/components/request/RequestBuilder/AuthTab/OAuth2AuthForm";
+import { type AuthType, switchVariant } from "@/lib/request/model";
 import { useActiveRequestStore } from "@/lib/store/active-request.store";
 
 const AUTH_OPTIONS: SelectOption<AuthType>[] = [
@@ -18,7 +19,13 @@ const AUTH_OPTIONS: SelectOption<AuthType>[] = [
 
 export function AuthTab() {
 	const auth = useActiveRequestStore(state => state.draft.auth);
+	const authDrafts = useActiveRequestStore(state => state.draft.authDrafts);
 	const patchDraft = useActiveRequestStore(state => state.patchDraft);
+
+	const onTypeChange = (type: AuthType) => {
+		const { value, drafts } = switchVariant(auth, type, authDrafts, defaultAuth);
+		patchDraft({ auth: value, authDrafts: drafts });
+	};
 
 	return (
 		<div className="flex flex-col gap-3">
@@ -27,7 +34,7 @@ export function AuthTab() {
 					aria-label="Auth type"
 					value={auth.type}
 					options={AUTH_OPTIONS}
-					onChange={type => patchDraft({ auth: defaultAuth(type) })}
+					onChange={onTypeChange}
 					className="w-56"
 				/>
 			</FormField>
