@@ -3,7 +3,6 @@ import { useHotkeys } from "react-hotkeys-hook";
 import {
 	Button,
 	CustomSelect,
-	Input,
 	MethodBadge,
 	type SelectOption,
 	Spinner,
@@ -16,6 +15,7 @@ import { DocsTab } from "@/components/request/RequestBuilder/DocsTab";
 import { HeadersTab } from "@/components/request/RequestBuilder/HeadersTab";
 import { ParamsTab } from "@/components/request/RequestBuilder/ParamsTab";
 import type { RequestSection } from "@/components/request/RequestBuilder/types";
+import { UrlBar } from "@/components/request/RequestBuilder/UrlBar";
 import { saveDraft } from "@/hooks/queries/use-requests";
 import { useSendRequest } from "@/hooks/use-send-request";
 import { HTTP_METHODS, type HttpMethod } from "@/lib/request/model";
@@ -87,12 +87,7 @@ export function RequestBuilder() {
 						onChange={method => patchDraft({ method })}
 						className="w-32 shrink-0"
 					/>
-					<Input
-						value={draft.url}
-						onChange={url => patchDraft({ url })}
-						placeholder="https://api.example.com/v1/users?id={{userId}}"
-						className="flex-1"
-					/>
+					<UrlBar className="flex-1" />
 				</div>
 				<div className="flex gap-2">
 					<Button onClick={send} disabled={isSending || draft.url.trim() === ""} className="flex-1 sm:flex-none">

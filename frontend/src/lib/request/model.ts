@@ -65,6 +65,8 @@ export const requestModelSchema = z.object({
 	method: z.enum(HTTP_METHODS),
 	url: z.string(),
 	params: z.array(keyValueSchema),
+	/** Values for the `:name` path-param tokens declared inline in `url`. */
+	pathParams: z.array(keyValueSchema).default([]),
 	headers: z.array(keyValueSchema),
 	body: bodyDescriptorSchema,
 	auth: authDescriptorSchema,
@@ -112,6 +114,7 @@ export function createEmptyRequest(): RequestModel {
 		method: "GET",
 		url: "",
 		params: [],
+		pathParams: [],
 		headers: [],
 		body: { type: "none" },
 		auth: { type: "none" },

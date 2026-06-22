@@ -21,6 +21,14 @@ describe("serializeRequest", () => {
 		expect(serializeRequest(req).url).toBe("https://x.com/a?z=1&q=2");
 	});
 
+	it("substitutes path params before appending the query", () => {
+		const req = createEmptyRequest();
+		req.url = "https://x.com/users/:id/posts/:slug";
+		req.pathParams = [kv("id", "42"), kv("slug", "")];
+		req.params = [kv("page", "2")];
+		expect(serializeRequest(req).url).toBe("https://x.com/users/42/posts/:slug?page=2");
+	});
+
 	it("drops disabled headers", () => {
 		const req = createEmptyRequest();
 		req.headers = [kv("A", "1"), kv("B", "2", false)];

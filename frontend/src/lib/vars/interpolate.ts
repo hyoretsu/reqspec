@@ -88,6 +88,7 @@ export function interpolateRequest(req: RequestModel, scope: VarScope): RequestM
 		...req,
 		url: interpolate(req.url, scope),
 		params: interpolateKeyValues(req.params, scope),
+		pathParams: interpolateKeyValues(req.pathParams ?? [], scope),
 		headers: interpolateKeyValues(req.headers, scope),
 		body: interpolateBody(req.body, scope),
 		auth: interpolatedAuth,

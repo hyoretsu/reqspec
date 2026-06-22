@@ -1,4 +1,5 @@
 import type { KeyValue, RequestModel } from "@/lib/request/model";
+import { applyPathParams } from "@/lib/request/url";
 import type { SerializedRequest } from "@/lib/http/types";
 
 function enabledPairs(items: KeyValue[]): [string, string][] {
@@ -79,9 +80,11 @@ export function serializeRequest(req: RequestModel): SerializedRequest {
 			body = undefined;
 	}
 
+	const url = applyPathParams(req.url, req.pathParams ?? []);
+
 	return {
 		method: req.method,
-		url: buildUrl(req.url, enabledPairs(req.params).concat(extraQuery)),
+		url: buildUrl(url, enabledPairs(req.params).concat(extraQuery)),
 		headers,
 		body,
 	};
