@@ -29,6 +29,32 @@ export const authDescriptorSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("none") }),
 	z.object({ type: z.literal("basic"), username: z.string(), password: z.string() }),
 	z.object({ type: z.literal("bearer"), token: z.string() }),
+	z.object({
+		type: z.literal("apikey"),
+		key: z.string(),
+		value: z.string(),
+		addTo: z.enum(["header", "query"]),
+	}),
+	z.object({
+		type: z.literal("awsv4"),
+		accessKeyId: z.string(),
+		secretAccessKey: z.string(),
+		region: z.string(),
+		service: z.string(),
+		sessionToken: z.string(),
+	}),
+	z.object({ type: z.literal("digest"), username: z.string(), password: z.string() }),
+	z.object({
+		type: z.literal("oauth2"),
+		grantType: z.enum(["client_credentials", "password", "token"]),
+		accessToken: z.string(),
+		tokenUrl: z.string(),
+		clientId: z.string(),
+		clientSecret: z.string(),
+		username: z.string(),
+		password: z.string(),
+		scope: z.string(),
+	}),
 ]);
 export type AuthDescriptor = z.infer<typeof authDescriptorSchema>;
 

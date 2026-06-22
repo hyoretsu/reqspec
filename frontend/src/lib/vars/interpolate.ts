@@ -49,19 +49,34 @@ function interpolateBody(body: BodyDescriptor, scope: VarScope): BodyDescriptor 
 	}
 }
 
+function interpolateAuth(auth: RequestModel["auth"], scope: VarScope): RequestModel["auth"] {
+	const t = (s: string) => interpolate(s, scope);
+	switch (auth.type) {
+		case "basic":
+			return { ...auth, username: t(auth.username), password: t(auth.password) };
+		case "bearer":
+			return { ...auth, token: t(auth.token) };
+		case "apikey":
+			return { ...auth, key: t(auth.key), value: t(auth.value) };
+		case "awsv4":
+			return {
+				...auth,
+				accessKeyId: t(auth.accessKeyId),
+				secretAccessKey: t(auth.secretAccessKey),
+				region: t(auth.region),
+				service: t(auth.service),
+				sessionToken: t(auth.sessionToken),
+			};
+		case "oauth2":
+			return { ...auth, accessToken: t(auth.accessToken) };
+		default:
+			return auth;
+	}
+}
+
 /** Apply variable interpolation across every field of a request. Pure. */
 export function interpolateRequest(req: RequestModel, scope: VarScope): RequestModel {
-	const auth = req.auth;
-	const interpolatedAuth =
-		auth.type === "basic"
-			? {
-					...auth,
-					username: interpolate(auth.username, scope),
-					password: interpolate(auth.password, scope),
-				}
-			: auth.type === "bearer"
-				? { ...auth, token: interpolate(auth.token, scope) }
-				: auth;
+	const interpolatedAuth = interpolateAuth(req.auth, scope);
 
 	return {
 		...req,

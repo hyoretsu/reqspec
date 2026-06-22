@@ -39,6 +39,35 @@ describe("serializeRequest", () => {
 		expect(serializeRequest(req).headers.Authorization).toBe("Bearer abc");
 	});
 
+	it("adds an API key to a header", () => {
+		const req = createEmptyRequest();
+		req.auth = { type: "apikey", key: "X-API-Key", value: "secret", addTo: "header" };
+		expect(serializeRequest(req).headers["X-API-Key"]).toBe("secret");
+	});
+
+	it("adds an API key to the query string", () => {
+		const req = createEmptyRequest();
+		req.url = "https://x.com/a";
+		req.auth = { type: "apikey", key: "api_key", value: "s e", addTo: "query" };
+		expect(serializeRequest(req).url).toBe("https://x.com/a?api_key=s%20e");
+	});
+
+	it("sends an OAuth2 access token as a Bearer header", () => {
+		const req = createEmptyRequest();
+		req.auth = {
+			type: "oauth2",
+			grantType: "token",
+			accessToken: "tok",
+			tokenUrl: "",
+			clientId: "",
+			clientSecret: "",
+			username: "",
+			password: "",
+			scope: "",
+		};
+		expect(serializeRequest(req).headers.Authorization).toBe("Bearer tok");
+	});
+
 	it("defaults JSON content-type for raw json body", () => {
 		const req = createEmptyRequest();
 		req.body = { type: "raw", subtype: "json", content: "{}" };

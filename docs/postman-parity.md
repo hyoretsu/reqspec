@@ -57,9 +57,11 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 | --- | --- |
 | Basic | ✅ |
 | Bearer token | ✅ |
-| API key | ❌ |
-| OAuth 1.0 / 2.0 | ❌ |
-| AWS Signature / Digest / NTLM / Hawk | ❌ |
+| API key (header / query) | ✅ |
+| OAuth 2.0 (client-credentials / password / token) | ✅ |
+| OAuth 2.0 (interactive auth-code + PKCE) | ❌ (needs redirect infra) |
+| AWS Signature v4 | ✅ |
+| OAuth 1.0 / Digest / NTLM / Hawk | ❌ |
 
 ## Import / export & interop
 
@@ -105,10 +107,11 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 ## Roadmap
 
 Full sequenced plan: `~/.claude/plans/this-app-is-basically-peppy-floyd.md`.
-M2 (workspaces, tabs, folders, docs, examples, search) and M3 (variable scopes,
-dynamic vars, secret vars, cookie jar) are **done**. Next:
+M2 (workspaces, tabs, folders, docs, examples, search), M3 (variable scopes,
+dynamic vars, secret vars, cookie jar), and M4 (API key, AWS SigV4, OAuth 2.0
+non-interactive) are **done**. Next:
 
-1. **M4** — auth parity (API key, OAuth 2.0, AWS SigV4, digest, …).
-2. **M5** — body parity (GraphQL, file upload, binary).
-3. **M6** — pre-request & test scripts (QuickJS) — the biggest functional gap.
-4. **M7–M10** — runner, mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.
+1. **M5** — body parity (GraphQL, file upload, binary).
+2. **M6** — pre-request & test scripts (QuickJS) — the biggest functional gap.
+3. **M7–M10** — runner, mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.
+4. **Deferred auth** — OAuth 2.0 interactive auth-code+PKCE (redirect infra), Digest, NTLM, Hawk.

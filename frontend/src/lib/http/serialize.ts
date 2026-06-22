@@ -5,8 +5,7 @@ function enabledPairs(items: KeyValue[]): [string, string][] {
 	return items.filter(i => i.enabled && i.key !== "").map(i => [i.key, i.value]);
 }
 
-function buildUrl(url: string, params: KeyValue[]): string {
-	const pairs = enabledPairs(params);
+function buildUrl(url: string, pairs: [string, string][]): string {
 	if (pairs.length === 0) return url;
 	const query = pairs.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
 	const separator = url.includes("?") ? "&" : "?";
@@ -20,15 +19,24 @@ function base64(value: string): string {
 	return btoa(binary);
 }
 
-/** Serialize a (already interpolated) request into transport-ready primitives. Pure. */
+/** Serialize a (already interpolated) request into transport-ready primitives. Pure.
+ * Sync auth (basic/bearer/apikey/oauth2 token) is applied here; awsv4 signing happens
+ * asynchronously in the send pipeline (see lib/auth/apply). */
 export function serializeRequest(req: RequestModel): SerializedRequest {
 	const headers: Record<string, string> = {};
 	for (const [key, value] of enabledPairs(req.headers)) headers[key] = value;
 
-	if (req.auth.type === "basic") {
-		headers.Authorization = `Basic ${base64(`${req.auth.username}:${req.auth.password}`)}`;
-	} else if (req.auth.type === "bearer") {
-		headers.Authorization = `Bearer ${req.auth.token}`;
+	const auth = req.auth;
+	const extraQuery: [string, string][] = [];
+	if (auth.type === "basic") {
+		headers.Authorization = `Basic ${base64(`${auth.username}:${auth.password}`)}`;
+	} else if (auth.type === "bearer") {
+		headers.Authorization = `Bearer ${auth.token}`;
+	} else if (auth.type === "oauth2") {
+		if (auth.accessToken !== "") headers.Authorization = `Bearer ${auth.accessToken}`;
+	} else if (auth.type === "apikey" && auth.key !== "") {
+		if (auth.addTo === "header") headers[auth.key] = auth.value;
+		else extraQuery.push([auth.key, auth.value]);
 	}
 
 	let body: string | FormData | undefined;
@@ -62,7 +70,7 @@ export function serializeRequest(req: RequestModel): SerializedRequest {
 
 	return {
 		method: req.method,
-		url: buildUrl(req.url, req.params),
+		url: buildUrl(req.url, enabledPairs(req.params).concat(extraQuery)),
 		headers,
 		body,
 	};
