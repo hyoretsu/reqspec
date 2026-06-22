@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { createKeyValue } from "@/lib/request/model";
 import {
 	applyPathParams,
+	barRoundTrips,
 	composeUrl,
 	extractPathParams,
 	mergeQueryParams,
@@ -76,6 +77,35 @@ describe("mergeQueryParams", () => {
 			["q", "1", true],
 			["hidden", "h", false],
 		]);
+	});
+});
+
+describe("barRoundTrips", () => {
+	it("is true when there are no active params", () => {
+		expect(barRoundTrips("https://x.com/a?legacy=1", [])).toBe(true);
+	});
+
+	it("is true for representable values (including a literal '=')", () => {
+		const params = [createKeyValue({ key: "q", value: "hi there" }), createKeyValue({ key: "f", value: "a=b" })];
+		expect(barRoundTrips("https://x.com/a", params)).toBe(true);
+	});
+
+	it("is false when a value contains a literal '&' (would re-parse as a separator)", () => {
+		const params = [createKeyValue({ key: "q", value: "a&b" })];
+		expect(barRoundTrips("https://x.com/a", params)).toBe(false);
+	});
+
+	it("ignores disabled rows", () => {
+		const params = [
+			createKeyValue({ key: "q", value: "1" }),
+			createKeyValue({ key: "x", value: "a&b", enabled: false }),
+		];
+		expect(barRoundTrips("https://x.com/a", params)).toBe(true);
+	});
+
+	it("is false when the base already carries its own query", () => {
+		const params = [createKeyValue({ key: "q", value: "2" })];
+		expect(barRoundTrips("https://x.com/a?z=1", params)).toBe(false);
 	});
 });
 

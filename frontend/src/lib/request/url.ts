@@ -45,6 +45,20 @@ export function composeUrl(base: string, params: KeyValue[]): string {
 	return `${base}${separator}${query}`;
 }
 
+/**
+ * Whether the URL bar can faithfully represent the current query params: composing then
+ * re-splitting must yield the same enabled params. Returns false when a value can't survive
+ * the readable (un-encoded) round-trip — i.e. it contains a literal `&` that would re-parse
+ * as a separator. Such values must be edited in the Query Params table, not the bar.
+ */
+export function barRoundTrips(url: string, params: KeyValue[]): boolean {
+	const active = params.filter(p => p.enabled && p.key !== "");
+	if (active.length === 0) return true;
+	const back = splitUrl(composeUrl(url, params)).params;
+	if (back.length !== active.length) return false;
+	return active.every((p, i) => back[i].key === p.key && back[i].value === p.value);
+}
+
 /** Merge query params parsed from the URL bar with the disabled rows kept only in the table. */
 export function mergeQueryParams(parsed: KeyValue[], existing: KeyValue[]): KeyValue[] {
 	return [...parsed, ...existing.filter(p => !p.enabled)];
