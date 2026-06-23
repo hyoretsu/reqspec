@@ -22,9 +22,25 @@ pre-commit:
   parallel: true
   jobs:
     - name: "Format and lint"
-      glob: "*.(cjs|css|graphql|html|js|jsx|json|jsonc|mjs|scss|ts|tsx|yaml|yml)"
-      run: bunx @biomejs/biome check --apply --files-ignore-unknown=true --no-errors-on-unmatched {staged_files}
-      stage_fixed: true
+      group:
+        piped: true
+        jobs:
+          - name: Biome
+            glob: "*.(astro|cjs|css|graphql|grit|html|js|json|jsonc|jsx|md|mjs|scss|svelte|ts|tsx|vue|yaml|yml)"
+            run: bunx @biomejs/biome check --diagnostic-level=error --files-ignore-unknown=true --no-errors-on-unmatched --write --unsafe {staged_files}
+            stage_fixed: true
+
+          - name: ESLint
+            glob: "*.(cjs|js|jsx|mjs|ts|tsx)"
+            run: bunx eslint --quiet --fix --no-error-on-unmatched-pattern {staged_files}
+            stage_fixed: true
+
+    # Coverage gate: the DB-free unit suite runs with --coverage and bunfig's
+    # coverageThreshold (0.95); below it `bun test` exits non-zero and blocks the
+    # commit. Only triggers when backend source is staged.
+    - name: "Unit coverage gate"
+      glob: "backend/**/*.{ts,tsx}"
+      run: cd backend && bun run test:unit
 
 pre-push:
   parallel: true
@@ -33,3 +49,12 @@ pre-push:
       run: |
         git pull
         exit 0
+
+# prepare-commit-msg:
+#   parallel: true
+#   jobs:
+#     - name: "Generate commit message with Commitizen"
+#       run: cz commit
+#       interactive: true
+#       env:
+#         LEFTHOOK: "0"

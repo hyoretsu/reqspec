@@ -1,7 +1,4 @@
 {
-	"files": [],
-	"references": [
-		{ "path": "frontend" },
-		{ "path": "packages/sql" }
-	]
+	"exclude": ["**/node_modules"],
+	"extends": "@hyoretsu/configs/ts"
 }

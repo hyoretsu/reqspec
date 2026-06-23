@@ -6,13 +6,14 @@
 		"build": "tsc -b && vite build",
 		"check-types": "tsc --noEmit",
 		"dev": "vite --host",
-		"preview": "vite preview",
 		"start": "vite preview",
-		"tauri": "tauri",
-		"tauri:android": "tauri android dev",
-		"tauri:build": "tauri build",
-		"tauri:dev": "tauri dev",
-		"tauri:ios": "tauri ios dev"
+		"tad": "tauri android dev",
+		"tb": "tauri build",
+		"td": "tauri dev",
+		"tid": "tauri ios dev",
+		"test": "bun scripts/test.ts",
+		"test:e2e": "bun run test e2e",
+		"test:unit": "bun run test unit"
 	},
 	"dependencies": {
 		"@dnd-kit/core": "^6.3.1",
