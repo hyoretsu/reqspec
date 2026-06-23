@@ -83,7 +83,7 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 | --- | --- | --- |
 | Pre-request scripts | ✅ | QuickJS sandbox, `pm` API, mutate request + variables, `pm.sendRequest` |
 | Test scripts / assertions | ✅ | `pm.test` + chai-subset `pm.expect`, Test Results + Console tabs |
-| Collection Runner + data files | ❌ | |
+| Collection Runner + data files | ✅ | ordered run of a collection/folder, CSV/JSON data file → per-iteration `data` scope, N iterations, live results, JSON export |
 | Mock servers | ❌ | |
 | Monitors | ❌ | |
 | Cookie jar editor | ✅ | auto-capture Set-Cookie, auto-send, per-domain manager |
@@ -112,9 +112,10 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 Full sequenced plan: `~/.claude/plans/this-app-is-basically-peppy-floyd.md`.
 M2 (workspaces, tabs, folders, docs, examples, search), M3 (variable scopes,
 dynamic vars, secret vars, cookie jar), M4 (API key, AWS SigV4, OAuth 2.0
-non-interactive), M5 (body parity), and M6 (scripting) are **done**. Next:
+non-interactive), M5 (body parity), M6 (scripting), and M7 (collection runner)
+are **done**. Next:
 
-1. **M7–M10** — runner, mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.
+1. **M8–M10** — mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.
 2. **Deferred auth** — OAuth 2.0 interactive auth-code+PKCE (redirect infra), Digest, NTLM, Hawk.
 
 **M6** ships pre-request & test scripts in a lazily-loaded QuickJS WASM sandbox
@@ -131,3 +132,12 @@ M5a (visual JSON builder, datetime/format fields, insert-variable, GraphQL,
 prettify/validate) and M5b (form-data file upload + binary body, via a
 session-only in-memory file store — files aren't persisted across reloads) are
 **done**.
+
+**M7** ships the Collection Runner (`lib/runner/*`, pure + 100% covered): `flattenRunItems`
+walks a collection/folder into an ordered run sequence, `parseDataFile` parses a CSV/JSON
+data file into per-iteration rows fed as the `data` variable layer, and `runCollection`
+drives the items through the existing M6 `httpClient.send` pipeline N times, carrying script
+variable writes forward while swapping the data layer per iteration. A `RunnerPanel` modal
+(launched from a ▶ on collections/folders) configures iterations/delay/data, streams live
+per-request + per-assertion results, and exports the run report as JSON. See
+[features/collection-runner.md](features/collection-runner.md).

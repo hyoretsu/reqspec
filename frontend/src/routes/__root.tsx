@@ -1,6 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
+import {
+	createRootRoute,
+	HeadContent,
+	Outlet,
+	Scripts,
+} from "@tanstack/react-router";
 import { type ReactNode, useEffect } from "react";
+import { RunnerPanel } from "@/components/runner";
 import { ModalHost } from "@/components/ui";
 import { applyTheme, useThemeStore } from "@/lib/store/theme.store";
 import appCss from "../globals.css?url";
@@ -16,7 +22,10 @@ export const Route = createRootRoute({
 	head: () => ({
 		meta: [
 			{ charSet: "utf-8" },
-			{ name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+			{
+				name: "viewport",
+				content: "width=device-width, initial-scale=1, viewport-fit=cover",
+			},
 			{ title: "ReqSpec" },
 		],
 		links: [
@@ -45,7 +54,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 function Root() {
-	const preference = useThemeStore(state => state.preference);
+	const preference = useThemeStore((state) => state.preference);
 
 	useEffect(() => {
 		applyTheme(preference);
@@ -55,6 +64,7 @@ function Root() {
 		<QueryClientProvider client={queryClient}>
 			<Outlet />
 			<ModalHost />
+			<RunnerPanel />
 		</QueryClientProvider>
 	);
 }

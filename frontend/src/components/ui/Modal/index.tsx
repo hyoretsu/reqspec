@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 interface ModalProps {
@@ -6,10 +6,24 @@ interface ModalProps {
 	onClose: () => void;
 	children: ReactNode;
 	footer?: ReactNode;
+	/** Card width. Defaults to `md`. */
+	size?: "md" | "lg" | "xl";
 }
 
+const SIZE_CLASS: Record<NonNullable<ModalProps["size"]>, string> = {
+	lg: "max-w-2xl",
+	md: "max-w-md",
+	xl: "max-w-4xl",
+};
+
 /** Base themed modal: portal overlay + centered card. Esc and backdrop click close it. */
-export function Modal({ title, onClose, children, footer }: ModalProps) {
+export function Modal({
+	title,
+	onClose,
+	children,
+	footer,
+	size = "md",
+}: ModalProps) {
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent) => {
 			if (event.key === "Escape") onClose();
@@ -28,12 +42,14 @@ export function Modal({ title, onClose, children, footer }: ModalProps) {
 				role="dialog"
 				aria-modal="true"
 				aria-label={title}
-				onClick={event => event.stopPropagation()}
-				className="w-full max-w-md rounded-card border border-border bg-surface-raised p-4 shadow-xl"
+				onClick={(event) => event.stopPropagation()}
+				className={`max-h-[85vh] w-full overflow-y-auto rounded-card border border-border bg-surface-raised p-4 shadow-xl ${SIZE_CLASS[size]}`}
 			>
 				<h2 className="mb-3 text-base font-semibold text-fg">{title}</h2>
 				<div className="text-sm text-fg">{children}</div>
-				{footer ? <div className="mt-4 flex justify-end gap-2">{footer}</div> : null}
+				{footer ? (
+					<div className="mt-4 flex justify-end gap-2">{footer}</div>
+				) : null}
 			</div>
 		</div>,
 		document.body,
