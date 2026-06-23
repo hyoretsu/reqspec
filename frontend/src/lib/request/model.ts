@@ -74,6 +74,13 @@ export const authDescriptorSchema = z.discriminatedUnion("type", [
 export type AuthDescriptor = z.infer<typeof authDescriptorSchema>;
 export type AuthType = AuthDescriptor["type"];
 
+/** A pre-request or test script attached to a request, in Postman's event shape. */
+export const scriptEventSchema = z.object({
+	listen: z.enum(["prerequest", "test"]),
+	script: z.string(),
+});
+export type ScriptEvent = z.infer<typeof scriptEventSchema>;
+
 export const requestModelSchema = z.object({
 	method: z.enum(HTTP_METHODS),
 	url: z.string(),
@@ -90,6 +97,8 @@ export const requestModelSchema = z.object({
 	 */
 	bodyDrafts: z.record(z.string(), bodyDescriptorSchema).optional(),
 	authDrafts: z.record(z.string(), authDescriptorSchema).optional(),
+	/** Pre-request and test scripts (QuickJS), in Postman's event shape. */
+	events: z.array(scriptEventSchema).default([]),
 });
 export type RequestModel = z.infer<typeof requestModelSchema>;
 
@@ -131,5 +140,21 @@ export function createEmptyRequest(): RequestModel {
 		headers: [],
 		body: { type: "none" },
 		auth: { type: "none" },
+		events: [],
 	};
+}
+
+/** Read the script source for a given event kind, or "" when absent. */
+export function getEventScript(events: ScriptEvent[], listen: ScriptEvent["listen"]): string {
+	return events.find(e => e.listen === listen)?.script ?? "";
+}
+
+/** Upsert a script for an event kind; an empty/whitespace-only script removes it. */
+export function setEventScript(
+	events: ScriptEvent[],
+	listen: ScriptEvent["listen"],
+	script: string,
+): ScriptEvent[] {
+	const without = events.filter(e => e.listen !== listen);
+	return script.trim() === "" ? without : [...without, { listen, script }];
 }

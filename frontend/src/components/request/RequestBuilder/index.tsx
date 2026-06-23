@@ -14,6 +14,7 @@ import { BodyTab } from "@/components/request/RequestBuilder/BodyTab";
 import { DocsTab } from "@/components/request/RequestBuilder/DocsTab";
 import { HeadersTab } from "@/components/request/RequestBuilder/HeadersTab";
 import { ParamsTab } from "@/components/request/RequestBuilder/ParamsTab";
+import { ScriptsTab } from "@/components/request/RequestBuilder/ScriptsTab";
 import type { RequestSection } from "@/components/request/RequestBuilder/types";
 import { UrlBar } from "@/components/request/RequestBuilder/UrlBar";
 import { saveDraft } from "@/hooks/queries/use-requests";
@@ -49,6 +50,7 @@ export function RequestBuilder() {
 		{ id: "headers", label: "Headers", badge: badge(enabledCount(draft.headers)) },
 		{ id: "body", label: "Body", badge: draft.body.type !== "none" ? dot() : undefined },
 		{ id: "auth", label: "Auth", badge: draft.auth.type !== "none" ? dot() : undefined },
+		{ id: "scripts", label: "Scripts", badge: draft.events.length > 0 ? dot() : undefined },
 		{ id: "docs", label: "Docs" },
 	];
 
@@ -108,6 +110,7 @@ export function RequestBuilder() {
 				{section === "headers" ? <HeadersTab /> : null}
 				{section === "body" ? <BodyTab /> : null}
 				{section === "auth" ? <AuthTab /> : null}
+				{section === "scripts" ? <ScriptsTab /> : null}
 				{section === "docs" ? <DocsTab /> : null}
 			</div>
 		</div>

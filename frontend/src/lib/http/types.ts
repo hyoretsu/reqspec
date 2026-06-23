@@ -35,6 +35,12 @@ export interface NormalizedResponse {
 	cookies: ParsedCookie[];
 	timeMs: number;
 	error?: string;
+	/** Results of `pm.test(...)` assertions from the request's test script, if any. */
+	tests?: import("@/lib/scripting/types").TestResult[];
+	/** `console.*` output captured across the pre-request and test scripts. */
+	consoleLogs?: import("@/lib/scripting/types").ConsoleLog[];
+	/** Final variable scope after running scripts, for the caller to persist. */
+	scriptVars?: VarScope;
 }
 
 export interface HttpClient {

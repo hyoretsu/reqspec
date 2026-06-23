@@ -1,14 +1,16 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button, EmptyState, KeyValueList, Spinner, StatusBadge, Tabs, type TabItem } from "@/components/ui";
+import { ConsoleTab } from "@/components/response/ResponseViewer/ConsoleTab";
 import { ResponseBodyTab } from "@/components/response/ResponseViewer/ResponseBodyTab";
 import { ResponseCookiesTab } from "@/components/response/ResponseViewer/ResponseCookiesTab";
+import { TestResultsTab } from "@/components/response/ResponseViewer/TestResultsTab";
 import * as requestsRepo from "@/lib/db/requests.repo";
 import type { SavedExample } from "@/lib/db/types";
 import { useActiveRequestStore } from "@/lib/store/active-request.store";
 import { promptDialog } from "@/lib/ui/modal";
 
-type ResponseSection = "body" | "headers" | "cookies";
+type ResponseSection = "body" | "headers" | "cookies" | "tests" | "console";
 
 function formatSize(bytes: number): string {
 	if (bytes < 1024) return `${bytes} B`;
@@ -56,11 +58,29 @@ export function ResponseViewer() {
 		return <EmptyState title="Request failed" description={response.error} />;
 	}
 
+	const tests = response.tests ?? [];
+	const logs = response.consoleLogs ?? [];
+	const passed = tests.filter(t => t.passed).length;
+
 	const tabs: TabItem<ResponseSection>[] = [
 		{ id: "body", label: "Body" },
 		{ id: "headers", label: "Headers" },
 		{ id: "cookies", label: "Cookies" },
 	];
+	if (tests.length > 0) {
+		tabs.push({
+			id: "tests",
+			label: "Tests",
+			badge: (
+				<span className={`rounded-full px-1.5 text-[10px] font-semibold ${passed === tests.length ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"}`}>
+					{passed}/{tests.length}
+				</span>
+			),
+		});
+	}
+	if (logs.length > 0) {
+		tabs.push({ id: "console", label: "Console" });
+	}
 
 	return (
 		<div className="flex h-full flex-col gap-3 p-3">
@@ -81,6 +101,8 @@ export function ResponseViewer() {
 				{section === "body" ? <ResponseBodyTab response={response} /> : null}
 				{section === "headers" ? <KeyValueList items={response.headers} emptyLabel="No headers." /> : null}
 				{section === "cookies" ? <ResponseCookiesTab response={response} /> : null}
+				{section === "tests" ? <TestResultsTab results={tests} /> : null}
+				{section === "console" ? <ConsoleTab logs={logs} /> : null}
 			</div>
 		</div>
 	);

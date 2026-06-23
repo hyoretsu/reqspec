@@ -81,8 +81,8 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| Pre-request scripts | ❌ | |
-| Test scripts / assertions | ❌ | |
+| Pre-request scripts | ✅ | QuickJS sandbox, `pm` API, mutate request + variables, `pm.sendRequest` |
+| Test scripts / assertions | ✅ | `pm.test` + chai-subset `pm.expect`, Test Results + Console tabs |
 | Collection Runner + data files | ❌ | |
 | Mock servers | ❌ | |
 | Monitors | ❌ | |
@@ -112,11 +112,20 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 Full sequenced plan: `~/.claude/plans/this-app-is-basically-peppy-floyd.md`.
 M2 (workspaces, tabs, folders, docs, examples, search), M3 (variable scopes,
 dynamic vars, secret vars, cookie jar), M4 (API key, AWS SigV4, OAuth 2.0
-non-interactive), and M5 (body parity) are **done**. Next:
+non-interactive), M5 (body parity), and M6 (scripting) are **done**. Next:
 
-1. **M6** — pre-request & test scripts (QuickJS) — the biggest functional gap.
-2. **M7–M10** — runner, mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.
-3. **Deferred auth** — OAuth 2.0 interactive auth-code+PKCE (redirect infra), Digest, NTLM, Hawk.
+1. **M7–M10** — runner, mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.
+2. **Deferred auth** — OAuth 2.0 interactive auth-code+PKCE (redirect infra), Digest, NTLM, Hawk.
+
+**M6** ships pre-request & test scripts in a lazily-loaded QuickJS WASM sandbox
+(`quickjs-emscripten`, no startup cost when a request has no scripts). The `pm` API runs
+as an in-VM shim bridged to a tested host engine (`lib/scripting/pm.ts`): variable scopes
+(get/set/unset/has, Postman precedence), `pm.request` mutation, `pm.response`,
+`pm.test` + a chai-subset `pm.expect` (`lib/scripting/expect.ts`), `pm.sendRequest`, and
+`console.*`. Pre-request runs before serialize (mutating request + vars); tests run after
+normalize. Script variable writes persist back to environment/globals/collection stores.
+A Scripts tab (pre-request/test editors + snippets) and Test Results + Console tabs in the
+response viewer surface the results. The VM has no host globals and a 5s interrupt guard.
 
 M5a (visual JSON builder, datetime/format fields, insert-variable, GraphQL,
 prettify/validate) and M5b (form-data file upload + binary body, via a

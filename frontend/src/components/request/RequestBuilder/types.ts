@@ -1,1 +1,1 @@
-export type RequestSection = "params" | "headers" | "body" | "auth" | "docs";
+export type RequestSection = "params" | "headers" | "body" | "auth" | "scripts" | "docs";
