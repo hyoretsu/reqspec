@@ -11,6 +11,7 @@ import {
 import { useFolderMutations } from "@/hooks/queries/use-folders";
 import { useRequestMutations } from "@/hooks/queries/use-requests";
 import type { CollectionRow, RequestRow } from "@/lib/db/types";
+import { createEmptyWebSocketRequest } from "@/lib/request/model";
 import { useRunnerStore } from "@/lib/store/runner.store";
 import { confirmDialog, promptDialog } from "@/lib/ui/modal";
 
@@ -31,6 +32,20 @@ export function CollectionNode({ collection }: { collection: CollectionRow }) {
 			defaultValue: "New request",
 		});
 		if (name) await requestMutations.create.mutateAsync({ name, folderId });
+	};
+
+	const addWebSocket = async (folderId: string | null = null) => {
+		const name = await promptDialog({
+			title: "New WebSocket request",
+			placeholder: "Request name",
+			defaultValue: "New WebSocket",
+		});
+		if (name)
+			await requestMutations.create.mutateAsync({
+				name,
+				folderId,
+				request: createEmptyWebSocketRequest(),
+			});
 	};
 
 	const addFolder = async () => {
@@ -118,6 +133,12 @@ export function CollectionNode({ collection }: { collection: CollectionRow }) {
 					<IconButton label="Add request" onClick={() => addRequest(null)}>
 						+
 					</IconButton>
+					<IconButton
+						label="Add WebSocket request"
+						onClick={() => addWebSocket(null)}
+					>
+						🔌
+					</IconButton>
 					<IconButton label="Add folder" onClick={addFolder}>
 						🗀
 					</IconButton>
@@ -162,6 +183,12 @@ export function CollectionNode({ collection }: { collection: CollectionRow }) {
 											onClick={() => addRequest(folder.id)}
 										>
 											+
+										</IconButton>
+										<IconButton
+											label="Add WebSocket request to folder"
+											onClick={() => addWebSocket(folder.id)}
+										>
+											🔌
 										</IconButton>
 										<IconButton
 											label="Rename folder"

@@ -91,9 +91,11 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 
 ## Protocols beyond HTTP
 
-| Feature | Status |
-| --- | --- |
-| GraphQL / gRPC / WebSocket / Socket.IO / MQTT | ❌ |
+| Feature | Status | Notes |
+| --- | --- | --- |
+| GraphQL | ✅ | via HTTP body (M5a) |
+| WebSocket | ✅ | M9 — connect, message composer (text/JSON), live message log, subprotocols |
+| Socket.IO / MQTT / gRPC | ❌ | protocol-agnostic seam landed (M9); adapters deferred to M9b |
 
 ## Platform & collaboration
 
@@ -112,10 +114,10 @@ collaboration is deliberately out of scope except for the paid sync IAP.
 Full sequenced plan: `~/.claude/plans/this-app-is-basically-peppy-floyd.md`.
 M2 (workspaces, tabs, folders, docs, examples, search), M3 (variable scopes,
 dynamic vars, secret vars, cookie jar), M4 (API key, AWS SigV4, OAuth 2.0
-non-interactive), M5 (body parity), M6 (scripting), and M7 (collection runner)
-are **done**. Next:
+non-interactive), M5 (body parity), M6 (scripting), M7 (collection runner), and
+M9 (protocol seam + WebSocket) are **done**. Next:
 
-1. **M8–M10** — mocks, protocols (WS/gRPC/MQTT/Socket.IO), export/codegen/response polish.
+1. **M8 / M9b / M10** — mocks, remaining protocols (Socket.IO/MQTT/gRPC), export/codegen/response polish.
 2. **Deferred auth** — OAuth 2.0 interactive auth-code+PKCE (redirect infra), Digest, NTLM, Hawk.
 
 **M6** ships pre-request & test scripts in a lazily-loaded QuickJS WASM sandbox
@@ -141,3 +143,14 @@ variable writes forward while swapping the data layer per iteration. A `RunnerPa
 (launched from a ▶ on collections/folders) configures iterations/delay/data, streams live
 per-request + per-assertion results, and exports the run report as JSON. See
 [features/collection-runner.md](features/collection-runner.md).
+
+**M9** lands the protocol-agnostic seam + WebSocket (foundation + WebSocket only; Socket.IO,
+MQTT, gRPC deferred to M9b). `RequestModel` gains a `protocol` discriminant (absent ⇒ `http`,
+backward compatible) and an optional `websocket` config (subprotocols, message format,
+persisted composer draft). Pure helpers (`lib/protocols/websocket.ts`, 100% covered) handle
+URL normalization/validation, log-entry construction, and outgoing-payload validation; the
+live socket (browser `WebSocket`, works in web + Tauri webview) is wired in a runtime store
+(`lib/store/ws.store.ts`). The builder branches on `protocol`: a `WebSocketPanel` (connect/
+disconnect, message composer, live in/out/system log) replaces the request/response UI, and a
+protocol picker switches kinds (unimplemented kinds show a placeholder). WebSocket requests are
+created from a 🔌 action on collections/folders. See [features/protocols.md](features/protocols.md).

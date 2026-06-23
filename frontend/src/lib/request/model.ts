@@ -1,7 +1,42 @@
 import { z } from "zod";
 
-export const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] as const;
+export const HTTP_METHODS = [
+	"GET",
+	"POST",
+	"PUT",
+	"PATCH",
+	"DELETE",
+	"HEAD",
+	"OPTIONS",
+] as const;
 export type HttpMethod = (typeof HTTP_METHODS)[number];
+
+/**
+ * Protocol a request speaks. `http`/`graphql` use the request/response model; the
+ * realtime + gRPC kinds are connection-oriented (M9). Stored on {@link RequestModel}
+ * as a discriminant so storage/builder/tabs can stay protocol-agnostic — a request
+ * without the field is treated as `http` (backward compatible with pre-M9 rows).
+ */
+export const PROTOCOLS = [
+	"http",
+	"graphql",
+	"websocket",
+	"socketio",
+	"mqtt",
+	"grpc",
+] as const;
+export type ProtocolKind = (typeof PROTOCOLS)[number];
+
+/** Per-request WebSocket configuration (handshake subprotocols + persisted composer draft). */
+export const webSocketConfigSchema = z.object({
+	/** `Sec-WebSocket-Protocol` subprotocols offered on connect. */
+	protocols: z.array(z.string()).default([]),
+	/** How the composer interprets/validates the outgoing draft. */
+	messageFormat: z.enum(["text", "json"]).default("text"),
+	/** Last composer content, persisted so it survives tab/session switches. */
+	draft: z.string().default(""),
+});
+export type WebSocketConfig = z.infer<typeof webSocketConfigSchema>;
 
 export const keyValueSchema = z.object({
 	id: z.string(),
@@ -26,7 +61,11 @@ export const bodyDescriptorSchema = z.discriminatedUnion("type", [
 	}),
 	z.object({ type: z.literal("form-data"), fields: z.array(keyValueSchema) }),
 	z.object({ type: z.literal("urlencoded"), fields: z.array(keyValueSchema) }),
-	z.object({ type: z.literal("graphql"), query: z.string(), variables: z.string() }),
+	z.object({
+		type: z.literal("graphql"),
+		query: z.string(),
+		variables: z.string(),
+	}),
 	z.object({
 		type: z.literal("binary"),
 		/** Key into the session file store holding the picked file's bytes. */
@@ -42,7 +81,11 @@ export type BodyType = BodyDescriptor["type"];
 
 export const authDescriptorSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("none") }),
-	z.object({ type: z.literal("basic"), username: z.string(), password: z.string() }),
+	z.object({
+		type: z.literal("basic"),
+		username: z.string(),
+		password: z.string(),
+	}),
 	z.object({ type: z.literal("bearer"), token: z.string() }),
 	z.object({
 		type: z.literal("apikey"),
@@ -58,7 +101,11 @@ export const authDescriptorSchema = z.discriminatedUnion("type", [
 		service: z.string(),
 		sessionToken: z.string(),
 	}),
-	z.object({ type: z.literal("digest"), username: z.string(), password: z.string() }),
+	z.object({
+		type: z.literal("digest"),
+		username: z.string(),
+		password: z.string(),
+	}),
 	z.object({
 		type: z.literal("oauth2"),
 		grantType: z.enum(["client_credentials", "password", "token"]),
@@ -82,6 +129,8 @@ export const scriptEventSchema = z.object({
 export type ScriptEvent = z.infer<typeof scriptEventSchema>;
 
 export const requestModelSchema = z.object({
+	/** Protocol discriminant; absent ⇒ `http`. See {@link PROTOCOLS}. */
+	protocol: z.enum(PROTOCOLS).default("http"),
 	method: z.enum(HTTP_METHODS),
 	url: z.string(),
 	params: z.array(keyValueSchema),
@@ -99,6 +148,8 @@ export const requestModelSchema = z.object({
 	authDrafts: z.record(z.string(), authDescriptorSchema).optional(),
 	/** Pre-request and test scripts (QuickJS), in Postman's event shape. */
 	events: z.array(scriptEventSchema).default([]),
+	/** WebSocket config; present when `protocol === "websocket"`. */
+	websocket: webSocketConfigSchema.optional(),
 });
 export type RequestModel = z.infer<typeof requestModelSchema>;
 
@@ -122,7 +173,9 @@ export function switchVariant<T extends { type: string }>(
 	return { value, drafts: nextDrafts };
 }
 
-export function createKeyValue(partial: Partial<Omit<KeyValue, "id">> = {}): KeyValue {
+export function createKeyValue(
+	partial: Partial<Omit<KeyValue, "id">> = {},
+): KeyValue {
 	return {
 		id: crypto.randomUUID(),
 		key: partial.key ?? "",
@@ -133,6 +186,7 @@ export function createKeyValue(partial: Partial<Omit<KeyValue, "id">> = {}): Key
 
 export function createEmptyRequest(): RequestModel {
 	return {
+		protocol: "http",
 		method: "GET",
 		url: "",
 		params: [],
@@ -144,9 +198,22 @@ export function createEmptyRequest(): RequestModel {
 	};
 }
 
+/** A blank WebSocket request: same base as HTTP but with the `websocket` protocol + config. */
+export function createEmptyWebSocketRequest(): RequestModel {
+	return {
+		...createEmptyRequest(),
+		protocol: "websocket",
+		url: "",
+		websocket: { protocols: [], messageFormat: "text", draft: "" },
+	};
+}
+
 /** Read the script source for a given event kind, or "" when absent. */
-export function getEventScript(events: ScriptEvent[], listen: ScriptEvent["listen"]): string {
-	return events.find(e => e.listen === listen)?.script ?? "";
+export function getEventScript(
+	events: ScriptEvent[],
+	listen: ScriptEvent["listen"],
+): string {
+	return events.find((e) => e.listen === listen)?.script ?? "";
 }
 
 /** Upsert a script for an event kind; an empty/whitespace-only script removes it. */
@@ -155,6 +222,6 @@ export function setEventScript(
 	listen: ScriptEvent["listen"],
 	script: string,
 ): ScriptEvent[] {
-	const without = events.filter(e => e.listen !== listen);
+	const without = events.filter((e) => e.listen !== listen);
 	return script.trim() === "" ? without : [...without, { listen, script }];
 }

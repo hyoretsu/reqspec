@@ -1,13 +1,16 @@
+import { CollectionNode } from "@/components/collections/CollectionsTree/CollectionNode";
 import { Button, EmptyState, Spinner } from "@/components/ui";
 import { SortableItem, SortableList } from "@/components/ui/Sortable";
-import { CollectionNode } from "@/components/collections/CollectionsTree/CollectionNode";
-import { useCollections, useCollectionMutations } from "@/hooks/queries/use-collections";
+import {
+	useCollectionMutations,
+	useCollections,
+} from "@/hooks/queries/use-collections";
 import { useImportPostman } from "@/hooks/use-import-postman";
 import { useSessionStore } from "@/lib/store/session.store";
 import { promptDialog } from "@/lib/ui/modal";
 
 export function CollectionsTree() {
-	const workspaceId = useSessionStore(state => state.activeWorkspaceId);
+	const workspaceId = useSessionStore((state) => state.activeWorkspaceId);
 	const { data: collections, isLoading } = useCollections(workspaceId);
 	const { create, reorder } = useCollectionMutations();
 	const { inputRef, openPicker, onFilesSelected } = useImportPostman();
@@ -32,9 +35,14 @@ export function CollectionsTree() {
 						accept="application/json,.json"
 						multiple
 						className="hidden"
-						onChange={event => onFilesSelected(event.target.files)}
+						onChange={(event) => onFilesSelected(event.target.files)}
 					/>
-					<Button size="sm" variant="secondary" onClick={openPicker} title="Import a Postman collection or environment">
+					<Button
+						size="sm"
+						variant="secondary"
+						onClick={openPicker}
+						title="Import a Postman collection or environment"
+					>
 						Import
 					</Button>
 					<Button size="sm" variant="secondary" onClick={addCollection}>
@@ -49,8 +57,11 @@ export function CollectionsTree() {
 						<Spinner />
 					</div>
 				) : collections?.length ? (
-					<SortableList ids={collections.map(c => c.id)} onReorder={ids => reorder.mutate(ids)}>
-						{collections.map(collection => (
+					<SortableList
+						ids={collections.map((c) => c.id)}
+						onReorder={(ids) => reorder.mutate(ids)}
+					>
+						{collections.map((collection) => (
 							<SortableItem key={collection.id} id={collection.id}>
 								{() => <CollectionNode collection={collection} />}
 							</SortableItem>

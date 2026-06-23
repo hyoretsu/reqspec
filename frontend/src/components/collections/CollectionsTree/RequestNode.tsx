@@ -14,11 +14,17 @@ interface RequestNodeProps {
 	onDelete: () => void;
 }
 
-export function RequestNode({ row, handleProps, onRename, onDuplicate, onDelete }: RequestNodeProps) {
+export function RequestNode({
+	row,
+	handleProps,
+	onRename,
+	onDuplicate,
+	onDelete,
+}: RequestNodeProps) {
 	const [showExamples, setShowExamples] = useState(false);
-	const activeId = useActiveRequestStore(state => state.requestId);
-	const openRequest = useTabsStore(state => state.openRequest);
-	const openLoaded = useTabsStore(state => state.openLoaded);
+	const activeId = useActiveRequestStore((state) => state.requestId);
+	const openRequest = useTabsStore((state) => state.openRequest);
+	const openLoaded = useTabsStore((state) => state.openLoaded);
 	const examples = row.examples ?? [];
 
 	return (
@@ -39,7 +45,7 @@ export function RequestNode({ row, handleProps, onRename, onDuplicate, onDelete 
 				{examples.length > 0 ? (
 					<button
 						type="button"
-						onClick={() => setShowExamples(p => !p)}
+						onClick={() => setShowExamples((p) => !p)}
 						aria-label="Toggle examples"
 						className="w-3 text-muted"
 					>
@@ -53,7 +59,18 @@ export function RequestNode({ row, handleProps, onRename, onDuplicate, onDelete 
 					onClick={() => openRequest(row.id, row.name, row.request)}
 					className="flex min-w-0 flex-1 items-center gap-2 text-left"
 				>
-					<MethodBadge method={row.request.method} className="w-12 shrink-0" />
+					{row.request.protocol && row.request.protocol !== "http" ? (
+						<span className="w-12 shrink-0 font-mono text-xs font-bold uppercase text-primary">
+							{row.request.protocol === "websocket"
+								? "WS"
+								: row.request.protocol}
+						</span>
+					) : (
+						<MethodBadge
+							method={row.request.method}
+							className="w-12 shrink-0"
+						/>
+					)}
 					<span className="truncate text-fg">{row.name}</span>
 				</button>
 				<div className="flex opacity-0 group-hover:opacity-100">
@@ -70,7 +87,7 @@ export function RequestNode({ row, handleProps, onRename, onDuplicate, onDelete 
 			</div>
 
 			{showExamples
-				? examples.map(ex => (
+				? examples.map((ex) => (
 						<button
 							key={ex.id}
 							type="button"

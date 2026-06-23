@@ -8,8 +8,13 @@ interface CollectionVariablesModalProps {
 	onClose: () => void;
 }
 
-export function CollectionVariablesModal({ collection, onClose }: CollectionVariablesModalProps) {
-	const [variables, setVariables] = useState<VariableRow[]>(collection.variables ?? []);
+export function CollectionVariablesModal({
+	collection,
+	onClose,
+}: CollectionVariablesModalProps) {
+	const [variables, setVariables] = useState<VariableRow[]>(
+		collection.variables ?? [],
+	);
 	const { setVariables: save } = useCollectionMutations();
 
 	const onSave = async () => {
@@ -31,7 +36,8 @@ export function CollectionVariablesModal({ collection, onClose }: CollectionVari
 			}
 		>
 			<p className="mb-2 text-xs text-muted">
-				Collection variables apply to every request in this collection (precedence below environment).
+				Collection variables apply to every request in this collection
+				(precedence below environment).
 			</p>
 			<KeyValueEditor
 				items={variables}
