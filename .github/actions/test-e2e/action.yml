@@ -1,0 +1,35 @@
+name: Run E2E tests for a package
+description: "Install deps and run a single workspace package's E2E suite against the dedicated test database. No Turbo cache: the suite hits external state, so a cache hit would skip a run that must actually execute (hence --force)."
+
+inputs:
+  package:
+    description: Workspace package name to test.
+    required: true
+  database-url:
+    description: Connection string for the dedicated CI test database.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+
+    - name: Cache Turbopack
+      uses: actions/cache@v4
+      with:
+        path: .turbo
+        key: ${{ runner.os }}-turbo-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-turbo-
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install
+
+    - name: Run E2E tests (${{ inputs.package }})
+      shell: bash
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+        DATABASE_TEST_URL: ${{ inputs.database-url }}
+      run: bun turbo run test:e2e -F ${{ inputs.package }} --force

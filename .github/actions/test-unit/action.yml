@@ -1,0 +1,29 @@
+name: Run unit tests for a package
+description: Install deps and run a single workspace package's unit tests via Turbo.
+
+inputs:
+  package:
+    description: Workspace package name to test.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+
+    - name: Cache Turbopack
+      uses: actions/cache@v4
+      with:
+        path: .turbo
+        key: ${{ runner.os }}-turbo-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-turbo-
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install
+
+    - name: Run unit tests (${{ inputs.package }})
+      shell: bash
+      run: bun turbo run test:unit -F ${{ inputs.package }}

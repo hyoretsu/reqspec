@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  detect:
+    name: Detect affected
+    runs-on: ubuntu-latest
+    outputs:
+      deployable: ${{ github.base_ref == 'main' || github.base_ref == 'staging' }}
+      tasks: ${{ steps.affected.outputs.tasks }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          # Need the base commit present to diff the PR against it.
+          fetch-depth: 0
+
+      - name: Compute affected packages
+        id: affected
+        uses: ./.github/actions/detect-affected
+        with:
+          tasks: check-types build test:unit test:e2e migrate:deploy
+          base-sha: ${{ github.event.pull_request.base.sha }}
+
+  build:
+    name: "${{ matrix.package }} / Build"
+    needs: detect
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.detect.outputs.tasks)['build'] }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Build
+        uses: ./.github/actions/build
+        with:
+          package: ${{ matrix.package }}
+
+  check-types:
+    name: "${{ matrix.package }} / Type-check"
+    needs: detect
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.detect.outputs.tasks)['check-types'] }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Check types
+        uses: ./.github/actions/check-types
+        with:
+          package: ${{ matrix.package }}
+
+  test_e2e:
+    name: "${{ matrix.package }} / E2E tests"
+    needs: detect
+    if: needs.detect.outputs.deployable == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.detect.outputs.tasks)['test:e2e'] }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Run E2E tests
+        uses: ./.github/actions/test-e2e
+        with:
+          package: ${{ matrix.package }}
+          database-url: ${{ secrets.DATABASE_TEST_URL }}
+
+  test_unit:
+    name: "${{ matrix.package }} / Unit tests"
+    needs: detect
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.detect.outputs.tasks)['test:unit'] }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Run unit tests
+        uses: ./.github/actions/test-unit
+        with:
+          package: ${{ matrix.package }}

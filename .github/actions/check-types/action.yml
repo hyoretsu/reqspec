@@ -1,0 +1,33 @@
+name: Type-check a package
+description: Install deps and type-check a single workspace package via Turbo.
+
+inputs:
+  package:
+    description: Workspace package name to type-check.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+
+    - name: Cache Turbopack
+      uses: actions/cache@v4
+      with:
+        path: .turbo
+        key: ${{ runner.os }}-turbo-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-turbo-
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install
+
+    - name: Type-check ${{ inputs.package }}
+      shell: bash
+      # generate/export (Turbo deps of check-types) read DATABASE_URL; a placeholder
+      # is enough since type-checking never touches the database.
+      env:
+        DATABASE_URL: postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder
+      run: bun turbo run check-types -F ${{ inputs.package }}
