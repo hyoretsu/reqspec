@@ -38,6 +38,7 @@ android {
                 keyPassword = keystoreProperties["password"] as String
                 storeFile = file(keystoreProperties["storeFile"] as String)
                 storePassword = keystoreProperties["password"] as String
+                storeType = keystoreProperties.getProperty("storeType", "PKCS12")
             }
         }
     }

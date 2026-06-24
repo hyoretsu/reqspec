@@ -8,7 +8,7 @@ description: >
 
 inputs:
   keystore-base64:
-    description: Base64-encoded release keystore (.jks/.keystore). Omit for an unsigned/debug build (e.g. PR checks).
+    description: Base64-encoded PKCS#12 release keystore (.p12). Omit for an unsigned/debug build (e.g. PR checks).
     required: false
   keystore-password:
     description: Password for the keystore and the signing key (shared).
@@ -61,11 +61,12 @@ runs:
         KEYSTORE_PASSWORD: ${{ inputs.keystore-password }}
         KEY_ALIAS: ${{ inputs.key-alias }}
       run: |
-        echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+        echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.p12"
         cat > keystore.properties <<EOF
         password=$KEYSTORE_PASSWORD
         keyAlias=$KEY_ALIAS
-        storeFile=$RUNNER_TEMP/release.keystore
+        storeFile=$RUNNER_TEMP/release.p12
+        storeType=PKCS12
         EOF
 
     - name: Resolve NDK path
