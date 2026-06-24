@@ -10,12 +10,27 @@ jobs:
     outputs:
       deployable: ${{ github.base_ref == 'main' || github.base_ref == 'staging' }}
       tasks: ${{ steps.affected.outputs.tasks }}
+      # Secrets can't be read in a job-level `if:`, so surface their presence as
+      # outputs and let DB-dependent jobs gate on them (skip rather than fail when unset).
+      has-db: ${{ steps.db-secrets.outputs.has-db }}
+      has-test-db: ${{ steps.db-secrets.outputs.has-test-db }}
+      has-shadow-db: ${{ steps.db-secrets.outputs.has-shadow-db }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
           # Need the base commit present to diff the PR against it.
           fetch-depth: 0
+
+      - name: Detect available database secrets
+        id: db-secrets
+        # Only the boolean (true/false) is written — the secret values never reach the log.
+        run: |
+          {
+            echo "has-db=${{ secrets.DATABASE_URL != '' }}"
+            echo "has-test-db=${{ secrets.DATABASE_TEST_URL != '' }}"
+            echo "has-shadow-db=${{ secrets.DATABASE_SHADOW_URL != '' }}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Compute affected packages
         id: affected
@@ -87,7 +102,8 @@ jobs:
   test_e2e:
     name: "${{ matrix.package }} / E2E tests"
     needs: detect
-    if: needs.detect.outputs.deployable == 'true'
+    # Needs a real Postgres; skip (rather than fail) when DATABASE_TEST_URL isn't configured.
+    if: needs.detect.outputs.deployable == 'true' && needs.detect.outputs.has-test-db == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
