@@ -8,14 +8,14 @@ description: >
 
 inputs:
   keystore-base64:
-    description: Base64-encoded release keystore (.jks/.keystore). Required to sign.
-    required: true
+    description: Base64-encoded release keystore (.jks/.keystore). Omit for an unsigned/debug build (e.g. PR checks).
+    required: false
   keystore-password:
     description: Password for the keystore and the signing key (shared).
-    required: true
+    required: false
   key-alias:
     description: Alias of the signing key inside the keystore.
-    required: true
+    required: false
 
 outputs:
   ndk-home:
@@ -52,6 +52,8 @@ runs:
       run: bun install
 
     - name: Materialize signing keystore
+      # Skipped when no keystore is provided — the build then stays unsigned (PR checks).
+      if: ${{ inputs.keystore-base64 != '' }}
       shell: bash
       working-directory: frontend/src-tauri/gen/android
       env:

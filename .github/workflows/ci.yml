@@ -41,6 +41,32 @@ jobs:
         with:
           package: ${{ matrix.package }}
 
+  android:
+    name: "frontend / Android build"
+    needs: detect
+    # The turbo `build` only checks the web bundle (vite); the Tauri Android build also
+    # cross-compiles the Rust core for the Android targets, so it can break independently.
+    # Run it whenever the frontend is affected. Debug/unsigned — no secrets, no upload.
+    if: contains(fromJSON(needs.detect.outputs.tasks)['build'], 'frontend')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Tauri Android toolchain
+        id: setup
+        uses: ./.github/actions/setup-tauri-android
+
+      - name: Build Android app (debug)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          NDK_HOME: ${{ steps.setup.outputs.ndk-home }}
+        with:
+          projectPath: frontend
+          tauriScript: bun tauri
+          mobile: android
+          args: --debug --apk
+
   check-types:
     name: "${{ matrix.package }} / Type-check"
     needs: detect
