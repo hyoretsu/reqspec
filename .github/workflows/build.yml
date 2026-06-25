@@ -13,8 +13,11 @@ on:
 
 jobs:
   android:
-    name: Build Android app
+    name: Build & release Android app
     runs-on: ubuntu-latest
+    permissions:
+      # tauri-action creates the GitHub release / uploads the APK.
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -27,22 +30,36 @@ jobs:
           keystore-password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
 
-      - name: Build Android app
+      - name: Build APK and publish GitHub release
         uses: tauri-apps/tauri-action@v0
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NDK_HOME: ${{ steps.setup.outputs.ndk-home }}
         with:
           projectPath: frontend
           tauriScript: bun tauri
           mobile: android
-          # Emit both the installable APK and the Play Store bundle.
-          args: --apk --aab
+          # APK only: tauri-action attaches every file it builds to the release, and the
+          # AAB must go to the Play Store instead. The AAB is built separately below.
+          args: --apk
+          tagName: app-v__VERSION__
+          releaseName: ReqSpec v__VERSION__
+          releaseDraft: false
+          prerelease: false
 
-      - name: Upload Android artifacts
-        uses: actions/upload-artifact@v4
+      - name: Build AAB for the Play Store
+        working-directory: frontend
+        env:
+          NDK_HOME: ${{ steps.setup.outputs.ndk-home }}
+        # Reuses the Rust libs already compiled by the APK build; only re-bundles.
+        run: bun tauri android build --aab
+
+      - name: Upload AAB to Google Play
+        uses: r0adkll/upload-google-play@v1
         with:
-          name: reqspec-android
-          if-no-files-found: error
-          path: |
-            frontend/src-tauri/gen/android/app/build/outputs/apk/**/release/*.apk
-            frontend/src-tauri/gen/android/app/build/outputs/bundle/**Release/*.aab
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          # Must match the Android applicationId in gen/android/app/build.gradle.kts.
+          packageName: com.hyoretsu.unidb
+          releaseFiles: frontend/src-tauri/gen/android/app/build/outputs/bundle/**/*.aab
+          track: internal
+          status: completed
