@@ -1,0 +1,13 @@
+version: 2
+
+updates:
+  - package-ecosystem: "bun"
+    directory: "/"
+    patterns: ["*"]
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "cargo"
+    directory: "/frontend/src-tauri"
+    patterns: ["*"]
+    schedule:
+      interval: "weekly"
