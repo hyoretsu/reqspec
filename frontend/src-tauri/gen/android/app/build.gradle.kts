@@ -16,13 +16,17 @@ val tauriProperties = Properties().apply {
 
 android {
     compileSdk = 34
-    namespace = "com.hyoretsu.unidb"
+    namespace = "com.hyoretsu.reqspec"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
-        applicationId = "com.hyoretsu.unidb"
+        applicationId = "com.hyoretsu.reqspec"
         minSdk = 24
         targetSdk = 34
-        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
+        // CI sets ANDROID_VERSION_CODE (the workflow run number) so every release to the
+        // Play Store carries a unique, monotonically increasing code; falls back to the
+        // value tauri generates into tauri.properties for local builds.
+        versionCode = (System.getenv("ANDROID_VERSION_CODE")
+            ?: tauriProperties.getProperty("tauri.android.versionCode", "1")).toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
     }
     // CI writes keystore.properties (see .github/actions/setup-tauri-android); absent

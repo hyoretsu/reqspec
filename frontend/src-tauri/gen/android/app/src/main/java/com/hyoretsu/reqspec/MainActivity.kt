@@ -1,3 +1,3 @@
-package com.hyoretsu.unidb
+package com.hyoretsu.reqspec
 
 class MainActivity : TauriActivity()

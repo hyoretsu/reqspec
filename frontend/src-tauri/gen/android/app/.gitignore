@@ -1,4 +1,4 @@
-/src/main/java/com/hyoretsu/unidb/generated
+/src/main/java/com/hyoretsu/reqspec/generated
 /src/main/jniLibs/**/*.so
 /src/main/assets/tauri.conf.json
 /tauri.build.gradle.kts

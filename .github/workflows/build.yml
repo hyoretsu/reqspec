@@ -35,6 +35,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NDK_HOME: ${{ steps.setup.outputs.ndk-home }}
+          # Unique, increasing versionCode per run so each Play upload is accepted.
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
         with:
           projectPath: frontend
           tauriScript: bun tauri
@@ -51,6 +53,8 @@ jobs:
         working-directory: frontend
         env:
           NDK_HOME: ${{ steps.setup.outputs.ndk-home }}
+          # Must match the APK build above so the release and the Play upload share a code.
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
         # Reuses the Rust libs already compiled by the APK build; only re-bundles.
         run: bun tauri android build --aab
 
@@ -59,7 +63,7 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           # Must match the Android applicationId in gen/android/app/build.gradle.kts.
-          packageName: com.hyoretsu.unidb
+          packageName: com.hyoretsu.reqspec
           releaseFiles: frontend/src-tauri/gen/android/app/build/outputs/bundle/**/*.aab
-          track: internal
+          track: production
           status: completed
