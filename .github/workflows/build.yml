@@ -30,13 +30,19 @@ jobs:
           keystore-password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
 
+      - name: Compute versionCode from commit timestamp
+        id: vc
+        # HEAD's committer epoch (minutes): deterministic per commit, monotonic on main,
+        # needs only HEAD (no full history) and stays well under Play's 2.1e9 ceiling.
+        run: echo "code=$(( $(git show -s --format=%ct HEAD) / 60 ))" >> "$GITHUB_OUTPUT"
+
       - name: Build APK and publish GitHub release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NDK_HOME: ${{ steps.setup.outputs.ndk-home }}
-          # Unique, increasing versionCode per run so each Play upload is accepted.
-          ANDROID_VERSION_CODE: ${{ github.run_number }}
+          # Unique, increasing versionCode so each Play upload is accepted.
+          ANDROID_VERSION_CODE: ${{ steps.vc.outputs.code }}
         with:
           projectPath: frontend
           tauriScript: bun tauri
@@ -54,7 +60,7 @@ jobs:
         env:
           NDK_HOME: ${{ steps.setup.outputs.ndk-home }}
           # Must match the APK build above so the release and the Play upload share a code.
-          ANDROID_VERSION_CODE: ${{ github.run_number }}
+          ANDROID_VERSION_CODE: ${{ steps.vc.outputs.code }}
         # Reuses the Rust libs already compiled by the APK build; only re-bundles.
         run: bun tauri android build --aab
 
