@@ -1,19 +1,100 @@
-name: Tauri Build
+name: CD
 
 on:
   push:
     branches:
       - main
-    # Only the Tauri frontend produces the apps; skip pushes that don't touch it.
-    paths:
-      - frontend/**
-      - .github/actions/setup-tauri-android/action.yml
-      - .github/workflows/build.yml
   workflow_dispatch:
 
 jobs:
+  detect:
+    name: Detect affected
+    runs-on: ubuntu-latest
+    outputs:
+      # {"build":["backend","frontend",...]} — only backend/frontend define a `build`
+      # script. The web (GHCR) job fans out over this list; the Tauri jobs gate on
+      # whether "frontend" is in it. A push that touches neither builds nothing.
+      # An empty base-sha (workflow_dispatch / first push) plans every service.
+      tasks: ${{ steps.affected.outputs.tasks }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          # Need history present so Turbo's --affected can diff against the base.
+          fetch-depth: 0
+
+      - name: Compute affected services
+        id: affected
+        uses: ./.github/actions/detect-affected
+        with:
+          tasks: build
+          base-sha: ${{ github.event.before }}
+
+  ghcr:
+    name: Build and publish ${{ matrix.service }} image
+    needs: detect
+    if: ${{ fromJSON(needs.detect.outputs.tasks).build[0] }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.detect.outputs.tasks).build }}
+        include:
+          - service: backend
+            dockerfile: backend/Dockerfile
+            build_args: |
+              NODE_ENV=production
+          - service: frontend
+            dockerfile: frontend/Dockerfile
+            build_args: |
+              NODE_ENV=production
+              VITE_API_URL=${{ vars.VITE_API_URL }}
+              VITE_APP_URL=${{ vars.VITE_APP_URL }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}_${{ matrix.service }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value={{date 'YYYYMMDD'}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: ${{ matrix.build_args }}
+          secrets: ${{ matrix.service == 'backend' && format('DATABASE_URL={0}', secrets.DATABASE_URL) || '' }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
   desktop:
     name: Build & release ${{ matrix.label }} app
+    needs: detect
+    # Only the Tauri frontend produces these apps; skip when it isn't affected.
+    if: ${{ contains(fromJSON(needs.detect.outputs.tasks).build, 'frontend') }}
     permissions:
       # tauri-action creates the GitHub release / uploads the installers.
       contents: write
@@ -32,50 +113,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install Linux build dependencies
-        # webkit2gtk + friends are required to compile the Tauri shell on Linux.
-        if: ${{ matrix.platform == 'ubuntu-latest' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libgtk-3-dev \
-            libwebkit2gtk-4.1-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            patchelf
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2
+      - name: Build & release desktop app
+        uses: ./.github/actions/tauri-build
         with:
-          workspaces: frontend/src-tauri -> target
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Build app and publish GitHub release
-        uses: tauri-apps/tauri-action@v0.6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          projectPath: frontend
-          tauriScript: bun tauri
-          # Windows → .msi/.exe, Linux → .deb/.rpm/.AppImage (bundle.targets = "all").
-          tagName: v__VERSION__
-          releaseName: ReqSpec v__VERSION__
-          releaseDraft: false
-          prerelease: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   android:
     name: Build & release Android app
+    needs: detect
+    if: ${{ contains(fromJSON(needs.detect.outputs.tasks).build, 'frontend') }}
     runs-on: ubuntu-latest
     permissions:
-      # tauri-action creates the GitHub release / uploads the APK.
+      # softprops/action-gh-release creates the GitHub release / uploads the APK.
       contents: write
     steps:
       - name: Checkout repository
@@ -136,6 +185,8 @@ jobs:
 
   ios:
     name: Build iOS app (stub)
+    needs: detect
+    if: ${{ contains(fromJSON(needs.detect.outputs.tasks).build, 'frontend') }}
     # Stub slot: iOS shipping needs a macOS runner, an Apple Developer account and
     # signing certs/provisioning profiles that aren't wired up yet. Kept as a
     # placeholder so the platform is tracked; flip to a real build once those exist.

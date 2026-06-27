@@ -1,0 +1,65 @@
+name: Build a Tauri desktop app
+description: >
+  Prepare a runner to build the Tauri desktop app (Bun, Rust, Linux native deps,
+  workspace deps) and build + publish the installers to a GitHub release via
+  tauri-apps/tauri-action. Runs for the host the job is on (Windows/Linux/macOS).
+  The repo must already be checked out before this runs.
+
+inputs:
+  github-token:
+    description: Token tauri-action uses to create the release and upload assets.
+    required: true
+  tag-name:
+    description: Release tag; tauri-action expands __VERSION__ to the app version.
+    required: false
+    default: v__VERSION__
+  release-name:
+    description: Release title.
+    required: false
+    default: ReqSpec v__VERSION__
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+
+    - name: Install Linux build dependencies
+      # webkit2gtk + friends are required to compile the Tauri shell on Linux;
+      # libayatana-appindicator3-dev is the package still shipped in Ubuntu 24.04.
+      if: ${{ runner.os == 'Linux' }}
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libgtk-3-dev \
+          libwebkit2gtk-4.1-dev \
+          libayatana-appindicator3-dev \
+          librsvg2-dev \
+          patchelf
+
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache Rust build
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: frontend/src-tauri -> target
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install
+
+    - name: Build app and publish GitHub release
+      uses: tauri-apps/tauri-action@v0.6
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      with:
+        projectPath: frontend
+        tauriScript: bun tauri
+        # Windows → .msi/.exe, Linux → .deb/.rpm/.AppImage, macOS → .dmg/.app
+        # (bundle.targets = "all").
+        tagName: ${{ inputs.tag-name }}
+        releaseName: ${{ inputs.release-name }}
+        releaseDraft: false
+        prerelease: false
