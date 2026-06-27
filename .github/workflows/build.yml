@@ -66,7 +66,7 @@ jobs:
           projectPath: frontend
           tauriScript: bun tauri
           # Windows → .msi/.exe, Linux → .deb/.rpm/.AppImage (bundle.targets = "all").
-          tagName: app-v__VERSION__
+          tagName: v__VERSION__
           releaseName: ReqSpec v__VERSION__
           releaseDraft: false
           prerelease: false
@@ -95,33 +95,34 @@ jobs:
         # needs only HEAD (no full history) and stays well under Play's 2.1e9 ceiling.
         run: echo "code=$(( $(git show -s --format=%ct HEAD) / 60 ))" >> "$GITHUB_OUTPUT"
 
-      - name: Build APK and publish GitHub release
-        uses: tauri-apps/tauri-action@v0.6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NDK_HOME: ${{ steps.setup.outputs.ndk-home }}
-          # Unique, increasing versionCode so each Play upload is accepted.
-          ANDROID_VERSION_CODE: ${{ steps.vc.outputs.code }}
-        with:
-          projectPath: frontend
-          tauriScript: bun tauri
-          mobile: android
-          # APK only: tauri-action attaches every file it builds to the release, and the
-          # AAB must go to the Play Store instead. The AAB is built separately below.
-          args: --apk
-          tagName: app-v__VERSION__
-          releaseName: ReqSpec v__VERSION__
-          releaseDraft: false
-          prerelease: false
+      - name: Read app version
+        id: version
+        # Tag the release after the app version (e.g. v1.0.0) — mirrors tauri-action's
+        # __VERSION__ that the desktop job expands.
+        run: echo "version=$(jq -r .version frontend/src-tauri/tauri.conf.json)" >> "$GITHUB_OUTPUT"
 
-      - name: Build AAB for the Play Store
+      - name: Build Android APK + AAB
         working-directory: frontend
         env:
           NDK_HOME: ${{ steps.setup.outputs.ndk-home }}
-          # Must match the APK build above so the release and the Play upload share a code.
+          # Unique, increasing versionCode so each Play upload is accepted.
           ANDROID_VERSION_CODE: ${{ steps.vc.outputs.code }}
-        # Reuses the Rust libs already compiled by the APK build; only re-bundles.
-        run: bun tauri android build --aab
+        # tauri-action's mobile support is flaky, so drive the Tauri CLI directly.
+        # One invocation builds both formats and shares the compiled Rust libs.
+        run: bun tauri android build --apk --aab
+
+      - name: Publish APK to GitHub release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Same tag the desktop job uses; the action creates it once and appends assets.
+          tag_name: v${{ steps.version.outputs.version }}
+          name: ReqSpec v${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          # AAB goes to Play, not the release — only attach the signed APK(s).
+          files: frontend/src-tauri/gen/android/app/build/outputs/apk/**/*-release.apk
 
       - name: Upload AAB to Google Play
         uses: r0adkll/upload-google-play@v1
