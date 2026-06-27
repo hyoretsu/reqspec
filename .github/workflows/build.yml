@@ -25,6 +25,8 @@ jobs:
             label: Windows
           - platform: ubuntu-latest
             label: Linux
+          - platform: macos-latest
+            label: macOS
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
@@ -39,11 +41,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
+            libgtk-3-dev \
             libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
+            libayatana-appindicator3-dev \
             librsvg2-dev \
-            patchelf \
-            libgtk-3-dev
+            patchelf
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
