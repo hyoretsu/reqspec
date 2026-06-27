@@ -1,10 +1,10 @@
-name: Build
+name: Tauri Build
 
 on:
   push:
     branches:
       - main
-    # Only the Tauri frontend produces the Android app; skip pushes that don't touch it.
+    # Only the Tauri frontend produces the apps; skip pushes that don't touch it.
     paths:
       - frontend/**
       - .github/actions/setup-tauri-android/action.yml
@@ -12,6 +12,63 @@ on:
   workflow_dispatch:
 
 jobs:
+  desktop:
+    name: Build & release ${{ matrix.label }} app
+    permissions:
+      # tauri-action creates the GitHub release / uploads the installers.
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            label: Windows
+          - platform: ubuntu-latest
+            label: Linux
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Linux build dependencies
+        # webkit2gtk + friends are required to compile the Tauri shell on Linux.
+        if: ${{ matrix.platform == 'ubuntu-latest' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libgtk-3-dev
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: frontend/src-tauri -> target
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build app and publish GitHub release
+        uses: tauri-apps/tauri-action@v0.6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: frontend
+          tauriScript: bun tauri
+          # Windows → .msi/.exe, Linux → .deb/.rpm/.AppImage (bundle.targets = "all").
+          tagName: app-v__VERSION__
+          releaseName: ReqSpec v__VERSION__
+          releaseDraft: false
+          prerelease: false
+
   android:
     name: Build & release Android app
     runs-on: ubuntu-latest
@@ -37,7 +94,7 @@ jobs:
         run: echo "code=$(( $(git show -s --format=%ct HEAD) / 60 ))" >> "$GITHUB_OUTPUT"
 
       - name: Build APK and publish GitHub release
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v0.6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NDK_HOME: ${{ steps.setup.outputs.ndk-home }}
@@ -73,3 +130,16 @@ jobs:
           releaseFiles: frontend/src-tauri/gen/android/app/build/outputs/bundle/**/*.aab
           track: production
           status: completed
+
+  ios:
+    name: Build iOS app (stub)
+    # Stub slot: iOS shipping needs a macOS runner, an Apple Developer account and
+    # signing certs/provisioning profiles that aren't wired up yet. Kept as a
+    # placeholder so the platform is tracked; flip to a real build once those exist.
+    runs-on: ubuntu-latest
+    steps:
+      - name: iOS build not configured
+        run: |
+          echo "::notice title=iOS::iOS build is a stub."
+          echo "To enable: run on macos-latest, 'bun tauri ios init', then"
+          echo "'bun tauri ios build' with APPLE signing secrets and a provisioning profile."
