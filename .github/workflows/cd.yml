@@ -25,7 +25,7 @@ jobs:
 
       - name: Compute affected services
         id: affected
-        uses: ./.github/actions/detect-affected
+        uses: hyoretsu/gh-actions/detect-affected@main
         with:
           tasks: build
           base-sha: ${{ github.event.before }}
@@ -114,7 +114,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Build & release desktop app
-        uses: ./.github/actions/tauri-build
+        uses: hyoretsu/gh-actions/tauri-build@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -132,7 +132,7 @@ jobs:
 
       - name: Setup Tauri Android toolchain
         id: setup
-        uses: ./.github/actions/setup-tauri-android
+        uses: hyoretsu/gh-actions/setup-tauri-android@main
         with:
           keystore-base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           keystore-password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
