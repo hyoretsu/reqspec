@@ -193,3 +193,5 @@ Backend status/error enums (e.g. bet status, payout status, error codes) exist t
 - **Integration / E2E tests** (multiple units, DB, or cross-module flows) live in a `tests/` folder within the relevant module.
 - **Never** name the folder `__tests__` (or any `__…__` form). The folder is always plainly named `tests`.
 - Backend runs on Bun: tests use `bun:test` and `bun test`.
+
+@RTK.md
