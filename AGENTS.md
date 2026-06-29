@@ -1,6 +1,6 @@
 # Global Guidelines
 
-> The sections below apply across every project that uses this `AGENTS.md` / `CLAUDE.md`. The single project-specific block is **Business Rules — Source of Truth**, which is local to this repo (`vivendo-de-bet`) and points to `docs/business-rules/`.
+> The sections below apply to this repo and to projects that intentionally reuse this `AGENTS.md` / `CLAUDE.md`.
 
 ## NEVER affect anything outside the local machine (absolute rule)
 
@@ -13,14 +13,9 @@ Forbidden unless the user explicitly asks for that specific action:
 
 Local work is fine: edit files, run local builds/tests, commit locally. Stop at the local boundary and let the user push / migrate / deploy themselves. If a task seems to need crossing that boundary, describe the exact command and ask first.
 
-## Business Rules — Source of Truth (project-specific to `vivendo-de-bet`)
+## Business Rules — Source of Truth
 
-Domain rules of the product (challenge lifecycle, betting limits, drawdown, breaches, antifraud, profit sharing, admin configuration, suggested entities) live in [`docs/business-rules/`](docs/business-rules/).
-
-- Start at [`docs/business-rules/README.md`](docs/business-rules/README.md) for the index and LLM usage guide.
-- For broad tasks (domain modeling, requirements, epic planning), feed the complete [`regras-completas.md`](docs/business-rules/regras-completas.md).
-- For focused tasks, feed only the topical file relevant to the change (e.g. `03-betting-and-balance.md`, `05-penalties.md`).
-- Always honor the prompt rules in [`prompt-llm.md`](docs/business-rules/prompt-llm.md): do not invent rules, surface open points instead of guessing, keep objective rules (block) separate from behavioral rules (penalize).
+Project-specific product rules live in [`docs/business-rules.md`](docs/business-rules.md). Keep AGENTS.md focused on agent workflow and engineering conventions; move domain/product rules there instead.
 
 ## Git Commits — Required After Every Completed Task
 
@@ -43,7 +38,7 @@ Before opening a PR or merging to `staging` or `main`, run a **type-check** and 
 
 Enforced automatically in two places, so this is normally hands-off:
 - **lefthook `pre-push`** runs `turbo check-types` + `turbo test:unit` locally.
-- **CI** (single [`.github/workflows/ci.yml`](.github/workflows/ci.yml)): one `detect` job runs [`scripts/affected-packages.ts`](scripts/affected-packages.ts) **once** and emits a JSON object keyed by task. It asks Turbo's dependency graph (`turbo run <task> --affected`, base = PR base commit) for the packages that (a) are affected by the diff (changed **or** transitively depend on a changed package) and (b) define that task as a script. So a change to a shared lib also schedules the downstream package's job. Each downstream job (`check-types`, `build`, `unit`, `e2e`, `migrate`) is a **matrix over its own key**, so an unaffected package spawns no job (and shows nothing in the PR checks); an empty list skips the check. Per-check steps are extracted into composite actions under [`.github/actions/`](.github/actions/) (one per check + `detect-affected`), so `ci.yml` stays thin. `e2e` and `migrate` additionally gate on PRs targeting `staging`/`main`.
+- **CI** ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs [`scripts/affected-packages.ts`](scripts/affected-packages.ts) once through the `hyoretsu/gh-actions/detect-affected` composite action and emits a JSON object keyed by task. It asks Turbo's dependency graph (`turbo run <task> --affected`, base = PR base commit) for packages that (a) are affected by the diff (changed **or** transitively depend on a changed package) and (b) define that task as a script. So a change to a shared lib also schedules downstream package jobs. Each downstream job (`check-types`, `build`, `unit`, `e2e`) is a **matrix over its own key**, so an unaffected package spawns no job; an empty list skips the check. `e2e` additionally gates on PRs targeting `staging`/`main` and the presence of `DATABASE_TEST_URL`.
 
 This is a local gate; running it never implies pushing or triggering CI — see the absolute local-boundary rule above.
 
@@ -175,13 +170,13 @@ If you need a hook for an endpoint that is not yet available on the production s
 
 ## i18n — Mandatory Rule
 
-The translation files in [frontend/src/i18n/locales/](frontend/src/i18n/locales/) **must remain synchronized**. Today only `pt-BR.json` exists (languages mirror the backend `SupportedLanguage` enum).
+If this repo introduces translation files under `frontend/src/i18n/locales/`, they **must remain synchronized**.
 
-**Every time you add, rename, or remove a key, apply the change to ALL locale files in the same operation.** Never leave one locale behind another, even if the final translation still needs review — in that case, use the pt-BR string as a placeholder and leave a comment in the PR, but ensure the key structure is identical across files.
+**Every time you add, rename, or remove a key, apply the change to ALL locale files in the same operation.** Never leave one locale behind another, even if the final translation still needs review. In that case, use the fallback-language string as a placeholder and leave a comment in the PR, but ensure the key structure is identical across files.
 
-- `pt-BR` is the fallback and the ground truth for types (see [frontend/src/i18n/types.d.ts](frontend/src/i18n/types.d.ts)).
-- Keys inside JSON files follow alphabetical order (linter rule).
-- When introducing a new namespace, register it in [frontend/src/i18n/config.ts](frontend/src/i18n/config.ts) and in `types.d.ts`.
+- The fallback locale is the ground truth for generated translation types.
+- Keys inside JSON files follow alphabetical order.
+- When introducing a new namespace, register it in the i18n config and translation type declarations in the same change.
 
 ### Enums Are Frontend-Translatable Contracts
 
