@@ -68,18 +68,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Tauri Android toolchain
-        id: setup
-        uses: hyoretsu/gh-actions/setup-tauri-android@main
-
-      - name: Build Android app (debug)
-        uses: tauri-apps/tauri-action@v0
-        env:
-          NDK_HOME: ${{ steps.setup.outputs.ndk-home }}
+      - name: Build Android app (debug, unsigned)
+        uses: hyoretsu/gh-actions/tauri-android-build@main
         with:
-          projectPath: frontend
-          tauriScript: bun tauri
-          mobile: android
           args: --debug --apk
 
   check-types:

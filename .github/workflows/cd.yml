@@ -107,19 +107,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Tauri Android toolchain
-        id: setup
-        uses: hyoretsu/gh-actions/setup-tauri-android@main
+      - name: Build Android app (APK + AAB)
+        id: build
+        uses: hyoretsu/gh-actions/tauri-android-build@main
         with:
           keystore-base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           keystore-password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
-
-      - name: Build Android artifacts (APK + AAB)
-        id: build
-        uses: hyoretsu/gh-actions/android-build@main
-        with:
-          ndk-home: ${{ steps.setup.outputs.ndk-home }}
 
       - name: Publish APK to GitHub release
         uses: softprops/action-gh-release@v2
@@ -134,14 +128,16 @@ jobs:
           # AAB goes to Play, not the release — only attach the signed APK(s).
           files: ${{ steps.build.outputs.apk-glob }}
 
-      # Store deploys consume the single build above; add sibling *-deploy steps per store.
-      - name: Deploy to Google Play
-        uses: hyoretsu/gh-actions/play-deploy@main
+      # Store uploads consume the single build above; add one step per store.
+      - name: Upload AAB to Google Play
+        uses: r0adkll/upload-google-play@v1
         with:
-          service-account-json: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           # Must match the Android applicationId in gen/android/app/build.gradle.kts.
-          package-name: com.hyoretsu.reqspec
-          aab: ${{ steps.build.outputs.aab-glob }}
+          packageName: com.hyoretsu.reqspec
+          releaseFiles: ${{ steps.build.outputs.aab-glob }}
+          track: production
+          status: completed
 
   ios:
     name: Build iOS app (stub)
